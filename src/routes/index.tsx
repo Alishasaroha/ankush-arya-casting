@@ -13,28 +13,41 @@ export const Route = createFileRoute("/")({
     head: () => ({
         meta: [
             { title: "Ankush Arya Casting — India's Talent Network" },
-            { name: "description", content: "10,000+ artists. One network. Casting actors, models, performers and creators for India's leading films, brands and OTT productions." },
+            { name: "description", content: "India's talent network. Casting actors, models, performers and creators for leading films, brands and OTT productions." },
             { property: "og:title", content: "Ankush Arya Casting" },
-            { property: "og:description", content: "10,000+ artists. One network. Cast your next story." },
+            { property: "og:description", content: "India's talent network. Cast your next story." },
         ],
     }),
     component: Home,
 });
 
 const CATEGORIES = [
-    { label: "Actors", count: "4,200+" },
-    { label: "Models", count: "2,100+" },
-    { label: "Child Artists", count: "900+" },
-    { label: "Influencers", count: "1,400+" },
-    { label: "Dancers", count: "800+" },
-    { label: "Content Creators", count: "600+" },
+    { label: "Actors" },
+    { label: "Child Artists" },
+    { label: "Content Creators" },
 ];
 
 const SERVICES = [
-    { icon: Film, title: "Film & OTT Casting", body: "End-to-end casting for features, series and shorts — from leads to ensemble." },
-    { icon: Camera, title: "Advertising & Brand", body: "Faces that move product. Casting for TVCs, digital films and brand campaigns." },
-    { icon: Sparkles, title: "Music & Editorial", body: "Performers and personalities for music videos, editorials and fashion films." },
-    { icon: Users, title: "Talent Management", body: "Long-term representation, development and career strategy for select artists." },
+  {
+    icon: Film,
+    title: "Film Casting",
+    body: "Casting actors and performers for feature films, short films and OTT productions."
+  },
+  {
+    icon: Camera,
+    title: "Advertisement Casting",
+    body: "Finding the perfect faces for TV commercials, digital campaigns and brand promotions."
+  },
+  {
+    icon: Sparkles,
+    title: "Music Video Casting",
+    body: "Casting performers, dancers and creators for music videos and entertainment projects."
+  },
+  {
+    icon: Users,
+    title: "Artist Management",
+    body: "Supporting artists with opportunities, representation and career growth."
+  },
 ];
 
 function Home() {
@@ -54,16 +67,15 @@ function Home() {
                 </div>
 
                 <div className="relative w-full mx-auto max-w-[1600px] px-6 md:px-12 pb-16 md:pb-24">
-                    <div className="eyebrow animate-fade-slow">India's Talent Network · Est. Mumbai</div>
+                    <div className="eyebrow animate-fade-slow">CASTING FOR FILMS · ADS · WEB SERIES</div>
                     <h1 className="mt-6 font-display text-[clamp(3rem,11vw,12rem)] leading-[0.86] tracking-[-0.04em] text-balance animate-reveal" style={{ animationDelay: "0.2s" }}>
-                        Where stories
+                        Finding the right face
                         <br />
-                        <span className="italic font-light text-gold">find their faces.</span>
+                        <span className="italic font-light text-gold">for every story.</span>
                     </h1>
                     <div className="mt-10 grid gap-8 md:grid-cols-[1fr_auto] md:items-end animate-reveal" style={{ animationDelay: "0.5s" }}>
                         <p className="max-w-xl text-base md:text-lg text-muted-foreground leading-relaxed">
-                            A curated network of over 10,000 actors, models, performers and creators —
-                            built for the producers, brands and filmmakers defining what comes next.
+                            Connecting filmmakers, production houses and brands with the right talent for films, advertisements, web series and digital projects.
                         </p>
                         <div className="flex flex-wrap gap-3">
                             <Link to="/producers" className="inline-flex items-center gap-2 bg-gold text-primary-foreground px-7 py-4 text-[11px] tracking-[0.28em] uppercase hover:bg-foreground transition-colors">
@@ -77,16 +89,14 @@ function Home() {
                 </div>
             </section>
 
-            {/* MARQUEE STATS */}
+            {/* MARQUEE */}
             <section className="border-y hairline overflow-hidden py-8 bg-surface">
                 <div className="flex animate-marquee gap-16 whitespace-nowrap">
-                    {[...Array(2)].map((_, i) => (
+                    {[...Array(4)].map((_, i) => (
                         <div key={i} className="flex gap-16 items-center">
-                            {["10,000+ Artists", "200+ Productions", "50+ Brands", "12 Cities", "Film · OTT · Brand · Music", "Mumbai · Delhi · Bangalore"].map((t) => (
-                                <span key={t} className="font-display text-3xl md:text-5xl italic text-muted-foreground">
-                                    {t} <span className="text-gold mx-8">✦</span>
-                                </span>
-                            ))}
+                            <span className="font-display text-3xl md:text-5xl italic text-muted-foreground">
+                                FILM · ADVERTISEMENTS · WEB SERIES · DIGITAL PROJECTS <span className="text-gold mx-8">✦</span>
+                            </span>
                         </div>
                     ))}
                 </div>
@@ -99,14 +109,14 @@ function Home() {
                         <div className="lg:sticky lg:top-32">
                             <div className="eyebrow">01 — The Network</div>
                             <h2 className="mt-6 font-display text-5xl md:text-7xl leading-[0.95] tracking-[-0.03em]">
-                                Ten thousand
+                                A talent network
                                 <br />
-                                <span className="italic text-gold">stories,</span> waiting.
+                                <span className="italic text-gold">built across </span> India.
                             </h2>
                             <p className="mt-8 text-muted-foreground leading-relaxed max-w-md">
-                                Every category. Every region. Every register. From breakout faces to
-                                seasoned performers, our roster spans the full spectrum of contemporary
-                                Indian talent.
+                                From fresh faces to experienced performers,
+                                our network helps producers discover the right talent
+                                quickly and efficiently.
                             </p>
                             <Link to="/talent" className="mt-10 inline-flex items-center gap-2 text-gold text-[11px] tracking-[0.28em] uppercase gold-underline">
                                 Browse Talent <ArrowUpRight className="h-4 w-4" />
@@ -116,8 +126,8 @@ function Home() {
                         <div className="grid grid-cols-2 gap-px bg-border">
                             {CATEGORIES.map((c) => (
                                 <div key={c.label} className="bg-background p-8 md:p-12 group hover:bg-surface transition-colors">
-                                    <div className="font-display text-4xl md:text-5xl text-gold">{c.count}</div>
-                                    <div className="mt-4 text-xs tracking-[0.24em] uppercase text-muted-foreground">{c.label}</div>
+                                    <div className="font-display text-3xl md:text-5xl text-gold">{c.label}</div>
+                                    <div className="mt-4 text-xs tracking-[0.24em] uppercase text-muted-foreground">Talent Network</div>
                                 </div>
                             ))}
                         </div>
@@ -215,9 +225,9 @@ function Home() {
 
                     <div className="grid gap-6 md:grid-cols-3">
                         {[
-                            { img: w1, title: "Untitled Anthology", type: "Streaming Series · 2024", lines: 38 },
-                            { img: w2, title: "House of Atelier", type: "Brand Campaign · 2024", lines: 12 },
-                            { img: w3, title: "Echoes", type: "Music Film · 2024", lines: 8 },
+                            { img: w1, title: "Untitled Anthology", type: "Streaming Series · 2024" },
+                            { img: w2, title: "House of Atelier", type: "Brand Campaign · 2024" },
+                            { img: w3, title: "Echoes", type: "Music Film · 2024" },
                         ].map((p) => (
                             <div key={p.title} className="group">
                                 <div className="relative aspect-[4/5] overflow-hidden bg-muted">
@@ -226,7 +236,7 @@ function Home() {
                                     <div className="absolute bottom-0 inset-x-0 p-8">
                                         <div className="text-[10px] tracking-[0.3em] uppercase text-gold">{p.type}</div>
                                         <h3 className="mt-3 font-display text-3xl">{p.title}</h3>
-                                        <div className="mt-2 text-xs text-muted-foreground">{p.lines} talents cast</div>
+                                        <div className="mt-2 text-xs text-muted-foreground">Casting & Talent Direction</div>
                                     </div>
                                 </div>
                             </div>
@@ -240,10 +250,10 @@ function Home() {
                 <Link to="/join" className="group relative p-12 md:p-20 lg:p-28 border-r hairline hover:bg-surface transition-colors">
                     <div className="eyebrow">For Talent</div>
                     <h3 className="mt-6 font-display text-4xl md:text-6xl leading-[0.95] tracking-tight">
-                        Build your<br /><span className="italic text-gold">presence.</span>
+                       Showcase your<br /><span className="italic text-gold">talent.</span>
                     </h3>
                     <p className="mt-6 text-muted-foreground max-w-sm">
-                        Register your profile, upload your portfolio, and become discoverable to India's top productions.
+                        Create your talent profile and share your details directly with Ankush Arya Casting.
                     </p>
                     <div className="mt-10 inline-flex items-center gap-2 text-[11px] tracking-[0.28em] uppercase">
                         Join the Network <ArrowUpRight className="h-4 w-4 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />

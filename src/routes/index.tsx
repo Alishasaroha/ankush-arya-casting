@@ -53,38 +53,84 @@ const SERVICES = [
 function Home() {
     return (
         <>
-            {/* HERO */}
-            <section className="relative min-h-[100svh] flex items-end overflow-hidden film-grain vignette">
-                <div className="absolute inset-0">
-                    <img
-                        src={hero}
-                        alt="Cinematic portrait under a single spotlight"
-                        className="absolute inset-0 h-full w-full object-cover animate-ken-burns"
-                        width={1920}
-                        height={1280}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-background/70" />
-                </div>
+            {/* HERO — Premium Editorial Split-Screen Layout */}
+            <section className="relative min-h-[calc(100svh-4.5rem)] pt-20 md:pt-24 border-b hairline bg-background overflow-hidden flex flex-col justify-between">
+                <div className="mx-auto w-full max-w-[1600px] grid lg:grid-cols-12 flex-1 items-stretch">
+                    {/* Left Column: Narrative, Typography & CTAs */}
+                    <div className="lg:col-span-7 flex flex-col justify-between px-6 sm:px-10 md:px-14 lg:px-16 py-12 md:py-16 lg:py-20 z-10">
+                        <div className="my-auto">
+                            <div className="eyebrow tracking-[0.32em] text-[10px] md:text-xs text-gold uppercase font-medium animate-reveal">
+                                Casting &amp; Talent Management
+                            </div>
 
-                <div className="relative w-full mx-auto max-w-[1600px] px-6 md:px-12 pb-16 md:pb-24">
-                    <div className="eyebrow animate-fade-slow">CASTING FOR FILMS · ADS · WEB SERIES</div>
-                    <h1 className="mt-6 font-display text-[clamp(3rem,11vw,12rem)] leading-[0.86] tracking-[-0.04em] text-balance animate-reveal" style={{ animationDelay: "0.2s" }}>
-                        Finding the right face
-                        <br />
-                        <span className="italic font-light text-gold">for every story.</span>
-                    </h1>
-                    <div className="mt-10 grid gap-8 md:grid-cols-[1fr_auto] md:items-end animate-reveal" style={{ animationDelay: "0.5s" }}>
-                        <p className="max-w-xl text-base md:text-lg text-muted-foreground leading-relaxed">
-                            Connecting filmmakers, production houses and brands with the right talent for films, advertisements, web series and digital projects.
-                        </p>
-                        <div className="flex flex-wrap gap-3">
-                            <Link to="/producers" className="inline-flex items-center gap-2 bg-gold text-primary-foreground px-7 py-4 text-[11px] tracking-[0.28em] uppercase hover:bg-foreground transition-colors">
-                                Cast With Us <ArrowUpRight className="h-4 w-4" />
-                            </Link>
-                            <Link to="/join" className="inline-flex items-center gap-2 border hairline px-7 py-4 text-[11px] tracking-[0.28em] uppercase hover:bg-foreground hover:text-background transition-colors">
-                                Join as Talent
-                            </Link>
+                            <h1
+                                className="mt-6 md:mt-8 font-display text-4xl sm:text-5xl md:text-6xl lg:text-[4.25rem] xl:text-[4.85rem] leading-[1.04] tracking-[-0.03em] text-foreground text-balance animate-reveal font-light"
+                                style={{ animationDelay: "0.15s" }}
+                            >
+                                Finding the right face
+                                <br />
+                                <span className="italic font-light text-gold">for every story.</span>
+                            </h1>
+
+                            <p
+                                className="mt-6 md:mt-8 max-w-xl text-base md:text-lg text-muted-foreground leading-relaxed animate-reveal font-normal"
+                                style={{ animationDelay: "0.25s" }}
+                            >
+                                Connecting filmmakers, production houses and brands with the right talent for films, advertisements, web series and digital projects.
+                            </p>
+
+                            <div
+                                className="mt-8 md:mt-10 flex flex-wrap items-center gap-4 animate-reveal"
+                                style={{ animationDelay: "0.35s" }}
+                            >
+                                <Link
+                                    to="/producers"
+                                    className="inline-flex items-center gap-2 bg-gold text-primary-foreground px-8 py-4 text-[11px] tracking-[0.26em] uppercase hover:bg-foreground hover:text-background transition-colors font-medium shrink-0"
+                                >
+                                    Cast With Us <ArrowUpRight className="h-4 w-4" />
+                                </Link>
+                                <Link
+                                    to="/join"
+                                    className="inline-flex items-center gap-2 border hairline px-8 py-4 text-[11px] tracking-[0.26em] uppercase text-foreground hover:border-gold hover:text-gold hover:bg-surface transition-colors font-medium shrink-0"
+                                >
+                                    Join as Talent
+                                </Link>
+                            </div>
                         </div>
+
+                        {/* Bottom Disciplines Strip */}
+                        <div
+                            className="mt-12 lg:mt-16 pt-6 border-t hairline grid grid-cols-3 gap-6 max-w-lg animate-reveal"
+                            style={{ animationDelay: "0.45s" }}
+                        >
+                            <div>
+                                <div className="text-[10px] tracking-[0.24em] uppercase text-muted-foreground/70">Discipline</div>
+                                <div className="mt-1.5 text-xs tracking-[0.16em] uppercase text-foreground font-medium">Films</div>
+                            </div>
+                            <div>
+                                <div className="text-[10px] tracking-[0.24em] uppercase text-muted-foreground/70">Discipline</div>
+                                <div className="mt-1.5 text-xs tracking-[0.16em] uppercase text-foreground font-medium">Commercials</div>
+                            </div>
+                            <div>
+                                <div className="text-[10px] tracking-[0.24em] uppercase text-muted-foreground/70">Discipline</div>
+                                <div className="mt-1.5 text-xs tracking-[0.16em] uppercase text-foreground font-medium">Web Series</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Right Column: Cinematic Grayscale Portrait */}
+                    <div className="lg:col-span-5 relative w-full min-h-[460px] sm:min-h-[540px] lg:min-h-full overflow-hidden bg-surface border-t lg:border-t-0 lg:border-l hairline">
+                        <img
+                            src={hero}
+                            alt="Cinematic editorial talent portrait"
+                            className="absolute inset-0 h-full w-full object-cover object-top grayscale contrast-[1.08] brightness-[0.98] transition-transform duration-[1.8s] ease-out hover:scale-[1.02]"
+                            width={1200}
+                            height={1600}
+                            loading="eager"
+                        />
+                        {/* Subtle edge treatment */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-background/30 via-transparent to-transparent pointer-events-none" />
+                        <div className="hidden lg:block absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-background to-transparent pointer-events-none opacity-40" />
                     </div>
                 </div>
             </section>

@@ -1,75 +1,254 @@
-# React + TypeScript + Vite
+# Ankush Arya Casting
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A web platform for **Ankush Arya Casting**, a casting agency connecting actors, models and creative talent with opportunities across films, advertisements, web series and digital projects.
 
-Currently, two official plugins are available:
+The platform aims to simplify talent registration, profile management and the agency's internal talent database.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+---
 
-## React Compiler
+## Table of Contents
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- [About the Project](#about-the-project)
+- [Project Objectives](#project-objectives)
+- [Technology Stack](#technology-stack)
+- [Current Features](#current-features)
+- [Project Structure](#project-structure)
+- [Application Routes](#application-routes)
+- [Getting Started](#getting-started)
+- [Available Scripts](#available-scripts)
+- [Product Scope](#product-scope)
+- [Development Roadmap](#development-roadmap)
+- [Git Workflow](#git-workflow)
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## About the Project
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+Ankush Arya Casting is a casting agency established to connect talent with opportunities in the entertainment and advertising industry.
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+The agency works with actors and other creative professionals for:
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+- Films
+- Advertisements
+- Web series
+- Digital projects
 
+This project aims to bring the agency's talent management process into a centralized digital platform.
+
+## Project Objectives
+
+- Allow talent to register and submit their professional details.
+- Maintain a centralized talent database.
+- Enable authorized agency staff to search and manage talent profiles.
+- Keep talent profiles private.
+- Provide a professional online presence for the agency.
+- Make talent information easier to organize and maintain.
+
+## Technology Stack
+
+The current frontend is built using:
+
+| Technology | Purpose |
+|---|---|
+| React | User interface |
+| TypeScript | Type safety |
+| TanStack Start | Full-stack React framework |
+| TanStack Router | File-based routing |
+| Tailwind CSS v4 | Styling |
+| Vite | Development and build tooling |
+| ESLint | Code quality |
+
+### Planned Backend Stack
+
+These technologies are planned and are not yet integrated:
+
+| Technology | Purpose |
+|---|---|
+| PostgreSQL | Relational database |
+| Prisma ORM | Database access and schema management |
+| Zod | Data validation |
+| Email service | Email verification |
+| Object storage | Talent photos and videos |
+
+## Current Features
+
+### Implemented
+
+- Agency homepage.
+- About page.
+- Talent information page.
+- Registration interface prototype.
+- Work and producer information pages.
+- Contact page.
+- Responsive visual foundation.
+
+### Not Yet Implemented
+
+- Backend authentication.
+- Email verification.
+- Database integration.
+- Persistent actor profiles.
+- Secure media uploads.
+- Admin dashboard.
+- Talent search and filtering.
+
+**Note:** The registration interface is currently a frontend prototype. Submitting it does not create an account or send a verification email.
+
+## Project Structure
+
+The application currently follows a file-based routing structure.
+
+```text
+ankush-arya-casting/
+│
+├── public/
+├── src/
+│   ├── assets/
+│   ├── components/
+│   │   └── site/
+│   ├── hooks/
+│   ├── lib/
+│   ├── routes/
+│   │   ├── __root.tsx
+│   │   ├── index.tsx
+│   │   ├── about.tsx
+│   │   ├── talent.tsx
+│   │   ├── join.tsx
+│   │   ├── work.tsx
+│   │   ├── producers.tsx
+│   │   └── contact.tsx
+│   ├── routeTree.gen.ts
+│   ├── router.tsx
+│   ├── server.ts
+│   └── start.ts
+│
+├── package.json
+├── package-lock.json
+├── tsconfig.json
+└── README.md
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### Important Directories
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+- `src/routes/` — Application pages and route definitions.
+- `src/components/` — Reusable UI components.
+- `src/components/site/` — Shared website components.
+- `src/assets/` — Application assets.
+- `src/hooks/` — Reusable React hooks.
+- `src/lib/` — Utility functions and supporting logic.
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+`routeTree.gen.ts` is generated by TanStack Router and should not be manually edited.
 
+## Application Routes
+
+| Route | Purpose |
+|---|---|
+| `/` | Homepage |
+| `/about` | Agency information |
+| `/talent` | Talent information |
+| `/join` | Registration interface |
+| `/work` | Agency work |
+| `/producers` | Information for production professionals |
+| `/contact` | Contact information |
+
+Some informational pages currently contain demonstration content and will be updated with verified agency information later.
+
+## Getting Started
+
+### Prerequisites
+
+Install the following before running the project:
+
+- Node.js
+- npm
+- Git
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/Alishasaroha/ankush-arya-casting.git
 ```
+
+### 2. Navigate to the project
+
+```bash
+cd ankush-arya-casting
+```
+
+### 3. Install dependencies
+
+```bash
+npm install
+```
+
+### 4. Start the development server
+
+```bash
+npm run dev
+```
+
+The development server will provide a local URL in the terminal.
+
+## Available Scripts
+
+| Command | Description |
+|---|---|
+| `npm run dev` | Start development server |
+| `npm run lint` | Run ESLint |
+| `npm run build` | Create production build |
+
+## Product Scope
+
+The initial product version (V1) will focus on talent registration and internal talent management.
+
+### Talent Categories
+
+- Actor
+- Model
+- Child Artist
+- Content Creator
+- Influencer
+- Other
+
+### Privacy
+
+Talent profiles are intended to remain private and accessible only to authorized agency staff and the relevant account holder or legal guardian.
+
+This access policy must be enforced through backend authentication and authorization before production use.
+
+Child artist accounts will require an appropriate parent or legal guardian workflow.
+
+## Development Roadmap
+
+| Phase | Scope | Status |
+|---|---|---|
+| 1 | Website foundation and visual design | In progress |
+| 2 | Backend architecture and database design | Planned |
+| 3 | Authentication and email verification | Planned |
+| 4 | Talent profile management | Planned |
+| 5 | Admin dashboard | Planned |
+| 6 | Talent search and filtering | Planned |
+| 7 | Media management | Planned |
+| 8 | Testing and production deployment | Planned |
+
+## Git Workflow
+
+The project uses Git for version control.
+
+| Branch | Purpose |
+|---|---|
+| `main` | Stable project baseline |
+| `redesign-v1` | Current development and visual refinement |
+
+### Development Guidelines
+
+- Create checkpoints before major changes.
+- Test changes before committing.
+- Keep commits focused and descriptive.
+- Avoid committing secrets or environment files.
+- Merge into `main` only after reviewing and testing completed work.
+
+---
+
+**Project:** Ankush Arya Casting  
+**Status:** Under active development

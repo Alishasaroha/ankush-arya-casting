@@ -23,3 +23,12 @@ dist-ssr
 *.sln
 *.sw?
 .tanstack/
+/src/generated/prisma
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Generated Prisma client
+/src/generated/prisma/

@@ -1,6 +1,10 @@
 import { useState, type FormEvent } from "react";
-import { createFileRoute, Link, redirect } from "@tanstack/react-router";
-import { getAdminTalentDirectoryFn, getCurrentUserFn } from "@/lib/auth.functions";
+import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
+import {
+  createAdminTalentProfileFn,
+  getAdminTalentDirectoryFn,
+  getCurrentUserFn,
+} from "@/lib/auth.functions";
 
 export const Route = createFileRoute("/admin/talents")({
   beforeLoad: async () => {
@@ -81,7 +85,22 @@ function calculateAge(dateOfBirth: Date | null): number | null {
 
 function AdminTalentDirectoryPage() {
   const { directory: initialDirectory, email } = Route.useRouteContext();
+  const navigate = useNavigate();
   const [directory, setDirectory] = useState(initialDirectory);
+  const [isCreateFormOpen, setIsCreateFormOpen] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+  const [createError, setCreateError] = useState("");
+  const [createForm, setCreateForm] = useState({
+    fullName: "",
+    dateOfBirth: "",
+    heightCm: "",
+    gender: "",
+    location: "",
+    bio: "",
+    languages: "",
+    experienceYears: "",
+    experienceSummary: "",
+  });
   const [filters, setFilters] = useState<FilterForm>({
     search: "",
     gender: "",
@@ -95,6 +114,49 @@ function AdminTalentDirectoryPage() {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+
+  async function handleCreateSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setIsCreating(true);
+    setCreateError("");
+
+    try {
+      const { profile } = await createAdminTalentProfileFn({
+        data: {
+          fullName: createForm.fullName,
+          dateOfBirth: createForm.dateOfBirth,
+          heightCm: numberOrNull(createForm.heightCm),
+          gender: createForm.gender,
+          location: createForm.location,
+          bio: createForm.bio,
+          languages: createForm.languages
+            .split(",")
+            .map((item) => item.trim())
+            .filter(Boolean),
+          experienceYears: numberOrNull(createForm.experienceYears),
+          experienceSummary: createForm.experienceSummary,
+        },
+      });
+
+      await navigate({
+        to: "/dashboard/profile/$profileId",
+        params: { profileId: profile.id },
+      });
+    } catch (creationError) {
+      console.error("Admin talent profile creation failed:", creationError);
+      setCreateError("We couldn't create this talent profile. Check the details and try again.");
+    } finally {
+      setIsCreating(false);
+    }
+  }
+
+  function updateCreateField(
+    field: keyof typeof createForm,
+    value: string,
+  ) {
+    setCreateForm((current) => ({ ...current, [field]: value }));
+    setCreateError("");
+  }
 
   function updateFilter(field: keyof FilterForm, value: string) {
     setFilters((current) => ({ ...current, [field]: value }));
@@ -190,10 +252,149 @@ function AdminTalentDirectoryPage() {
             </h1>
             <p className="mt-3 text-sm text-muted-foreground">{email}</p>
           </div>
-          <p className="border hairline px-4 py-3 text-xs uppercase tracking-widest">
-            {directory.total.toLocaleString()} matching profiles
-          </p>
+          <div className="flex flex-wrap items-center gap-3">
+            <p className="border hairline px-4 py-3 text-xs uppercase tracking-widest">
+              {directory.total.toLocaleString()} matching profiles
+            </p>
+            <button
+              type="button"
+              onClick={() => setIsCreateFormOpen((open) => !open)}
+              className="bg-foreground px-5 py-3 text-xs uppercase tracking-widest text-background hover:opacity-80"
+            >
+              {isCreateFormOpen ? "Close form" : "+ Add talent"}
+            </button>
+          </div>
         </header>
+
+        {isCreateFormOpen && (
+          <form
+            onSubmit={handleCreateSubmit}
+            className="mt-8 space-y-6 border hairline bg-surface p-6 md:p-8"
+          >
+            <div>
+              <h2 className="font-display text-2xl">Add Talent Profile</h2>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Create a private agency record for an actor who has not registered yet.
+                This profile will remain unclaimed until a separate account-linking process is completed.
+              </p>
+            </div>
+
+            <div className="grid gap-5 md:grid-cols-2">
+              <label className="block text-sm md:col-span-2">
+                <span className="mb-2 block text-xs uppercase tracking-widest text-muted-foreground">Full name *</span>
+                <input
+                  required
+                  minLength={2}
+                  maxLength={100}
+                  value={createForm.fullName}
+                  onChange={(event) => updateCreateField("fullName", event.target.value)}
+                  className="w-full border hairline bg-background px-4 py-3 outline-none focus:border-gold"
+                />
+              </label>
+              <label className="block text-sm">
+                <span className="mb-2 block text-xs uppercase tracking-widest text-muted-foreground">Date of birth</span>
+                <input
+                  type="date"
+                  value={createForm.dateOfBirth}
+                  onChange={(event) => updateCreateField("dateOfBirth", event.target.value)}
+                  className="w-full border hairline bg-background px-4 py-3 outline-none focus:border-gold"
+                />
+              </label>
+              <label className="block text-sm">
+                <span className="mb-2 block text-xs uppercase tracking-widest text-muted-foreground">Height (cm)</span>
+                <input
+                  type="number"
+                  min={30}
+                  max={250}
+                  step={1}
+                  value={createForm.heightCm}
+                  onChange={(event) => updateCreateField("heightCm", event.target.value)}
+                  className="w-full border hairline bg-background px-4 py-3 outline-none focus:border-gold"
+                />
+              </label>
+              <label className="block text-sm">
+                <span className="mb-2 block text-xs uppercase tracking-widest text-muted-foreground">Gender</span>
+                <input
+                  maxLength={50}
+                  value={createForm.gender}
+                  onChange={(event) => updateCreateField("gender", event.target.value)}
+                  className="w-full border hairline bg-background px-4 py-3 outline-none focus:border-gold"
+                />
+              </label>
+              <label className="block text-sm">
+                <span className="mb-2 block text-xs uppercase tracking-widest text-muted-foreground">Current location</span>
+                <input
+                  maxLength={150}
+                  value={createForm.location}
+                  onChange={(event) => updateCreateField("location", event.target.value)}
+                  placeholder="City, State"
+                  className="w-full border hairline bg-background px-4 py-3 outline-none focus:border-gold"
+                />
+              </label>
+              <label className="block text-sm md:col-span-2">
+                <span className="mb-2 block text-xs uppercase tracking-widest text-muted-foreground">Languages known</span>
+                <input
+                  value={createForm.languages}
+                  onChange={(event) => updateCreateField("languages", event.target.value)}
+                  placeholder="Hindi, English, Punjabi"
+                  className="w-full border hairline bg-background px-4 py-3 outline-none focus:border-gold"
+                />
+              </label>
+              <label className="block text-sm">
+                <span className="mb-2 block text-xs uppercase tracking-widest text-muted-foreground">Years of experience</span>
+                <input
+                  type="number"
+                  min={0}
+                  max={80}
+                  step={1}
+                  value={createForm.experienceYears}
+                  onChange={(event) => updateCreateField("experienceYears", event.target.value)}
+                  className="w-full border hairline bg-background px-4 py-3 outline-none focus:border-gold"
+                />
+              </label>
+              <label className="block text-sm md:col-span-2">
+                <span className="mb-2 block text-xs uppercase tracking-widest text-muted-foreground">Short bio</span>
+                <textarea
+                  rows={3}
+                  maxLength={2000}
+                  value={createForm.bio}
+                  onChange={(event) => updateCreateField("bio", event.target.value)}
+                  className="w-full resize-y border hairline bg-background px-4 py-3 outline-none focus:border-gold"
+                />
+              </label>
+              <label className="block text-sm md:col-span-2">
+                <span className="mb-2 block text-xs uppercase tracking-widest text-muted-foreground">Experience details</span>
+                <textarea
+                  rows={3}
+                  maxLength={2000}
+                  value={createForm.experienceSummary}
+                  onChange={(event) => updateCreateField("experienceSummary", event.target.value)}
+                  className="w-full resize-y border hairline bg-background px-4 py-3 outline-none focus:border-gold"
+                />
+              </label>
+            </div>
+
+            {createError && <p role="alert" className="text-sm text-destructive">{createError}</p>}
+
+            <div className="flex flex-wrap gap-3 border-t hairline pt-5">
+              <button
+                type="submit"
+                disabled={isCreating}
+                className="bg-foreground px-6 py-3 text-xs uppercase tracking-widest text-background hover:opacity-80 disabled:opacity-50"
+              >
+                {isCreating ? "Creating..." : "Create profile"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsCreateFormOpen(false)}
+                disabled={isCreating}
+                className="border hairline px-6 py-3 text-xs uppercase tracking-widest hover:border-gold"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        )}
 
         <form
           onSubmit={handleSubmit}

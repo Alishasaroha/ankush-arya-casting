@@ -115,3 +115,36 @@ export async function searchAdminTalentProfiles(
     totalPages: Math.max(1, Math.ceil(total / PAGE_SIZE)),
   };
 }
+
+
+/**
+ * Create an unclaimed talent record for an actor who has not registered yet.
+ * Ownership and guardian relationships remain null until a separate,
+ * verified account-linking workflow is implemented.
+ */
+export async function createAdminTalentProfile(
+  input: import("../validation/admin-talent").CreateAdminTalentProfileInput,
+) {
+  await requireRole(APP_ROLES.ADMIN);
+
+  return prisma.talentProfile.create({
+    data: {
+      fullName: input.fullName,
+      dateOfBirth: input.dateOfBirth
+        ? new Date(input.dateOfBirth + "T00:00:00.000Z")
+        : null,
+      heightCm: input.heightCm,
+      gender: input.gender || null,
+      location: input.location || null,
+      bio: input.bio || null,
+      languages: input.languages,
+      experienceYears: input.experienceYears,
+      experienceSummary: input.experienceSummary || null,
+      // ownerUserId and primaryGuardianUserId intentionally stay null.
+    },
+    select: {
+      id: true,
+      fullName: true,
+    },
+  });
+}

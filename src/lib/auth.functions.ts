@@ -34,8 +34,14 @@ import {
   talentProfileIdSchema,
   updateTalentProfileSchema,
 } from "./validation/talent-profile";
-import { adminTalentDirectorySchema } from "./validation/admin-talent";
-import { searchAdminTalentProfiles } from "./server/admin-talent";
+import {
+  adminTalentDirectorySchema,
+  createAdminTalentProfileSchema,
+} from "./validation/admin-talent";
+import {
+  createAdminTalentProfile,
+  searchAdminTalentProfiles,
+} from "./server/admin-talent";
 
 export const registerAdultActorFn = createServerFn({
   method: "POST",
@@ -233,6 +239,15 @@ export const getAdminTalentDirectoryFn = createServerFn({
   .handler(async ({ data }) => {
     const directory = await searchAdminTalentProfiles(data);
     return { directory };
+  });
+
+export const createAdminTalentProfileFn = createServerFn({
+  method: "POST",
+})
+  .validator(createAdminTalentProfileSchema)
+  .handler(async ({ data }) => {
+    const profile = await createAdminTalentProfile(data);
+    return { profile };
   });
 
 export const getTalentProfileFn = createServerFn({

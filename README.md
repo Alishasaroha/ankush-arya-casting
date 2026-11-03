@@ -177,7 +177,7 @@ Important files:
 
 - `src/lib/auth.functions.ts` — TanStack Start server functions.
 - `src/lib/server/auth/` — Server-only authentication, session, and authorization logic.
-- `src/lib/server/admin-talent.ts` — Admin-only server-side talent search, filters, and pagination.
+- `src/lib/server/admin-talent.ts` — Admin-only talent search, filters, pagination, and creation of unclaimed records.
 - `src/lib/server/email/` — Transactional email delivery.
 - `src/lib/server/prisma.ts` — Prisma database client.
 - `src/lib/validation/auth.ts` — Authentication Zod validation schemas.
@@ -199,7 +199,7 @@ Important files:
 | `/login` | Login |
 | `/dashboard` | Authenticated account dashboard |
 | `/dashboard/profile/$profileId` | Protected talent profile editor |
-| `/admin/talents` | Admin-only talent directory with server-side search and filters |
+| `/admin/talents` | Admin-only talent directory with search, filters, pagination, and manual profile creation |
 | `/work` | Agency work |
 | `/producers` | Information for production professionals |
 | `/contact` | Contact information |
@@ -341,7 +341,7 @@ The first version focuses on a private talent database and basic agency administ
 | 7 | Guardian and child artist registration | Planned |
 | 8 | Actor-approved manager access and revocation | Planned |
 | 9 | Talent profile management | Expanded editor implemented; migration, TypeScript check, and production build passed locally; interactive save verification pending |
-| 10 | Admin talent directory with search, filters, and pagination | Implemented on feature branch; first-admin provisioning and access test pending |
+| 10 | Admin talent management | Directory, server-side search/filters, pagination, and manual creation of unclaimed profiles implemented; admin provisioning and access test pending |
 | 11 | Media storage, security hardening, testing, and deployment | Planned |
 
 ## Git workflow

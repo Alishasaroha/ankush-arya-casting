@@ -102,7 +102,7 @@ A separate Express API server is not part of the current architecture. Backend o
 - Admin profile access is designed to be agency-wide.
 - The dashboard's profile list is scoped by the signed-in user's role and ownership/guardian relationships.
 
-**Authorization limitations:** Manager access is deliberately not granted until the actor-approved, revocable manager-access relationship is implemented. No public registration flow can assign the ADMIN role. An administrator bootstrap and controlled role-assignment workflow are still required. Route guards improve navigation but are not a substitute for authorization inside every private server operation.
+**Authorization limitations:** Manager access is deliberately not granted until the actor-approved, revocable manager-access relationship is implemented. No public registration flow can assign the ADMIN role. The first agency administrator is provisioned manually by a database owner using `prisma/bootstrap-admin.sql`. Route guards improve navigation but are not a substitute for authorization inside every private server operation.
 
 ## Authorization model
 
@@ -123,6 +123,7 @@ The main application structure is shown below. Generated and tooling files are o
 ankush-arya-casting/
 ├── prisma/
 │   ├── migrations/
+│   ├── bootstrap-admin.sql
 │   └── schema.prisma
 ├── public/
 ├── src/
@@ -193,6 +194,23 @@ Important files:
 | `/contact` | Contact information |
 
 Some informational pages may still contain demonstration content. Agency work, clients, testimonials, and statistics should be replaced only with details verified by the agency.
+
+## First admin bootstrap
+
+The first agency administrator must be provisioned deliberately by someone with direct database-owner access. There is no public registration or server function that grants the `ADMIN` role.
+
+1. Register the intended agency administrator through the normal registration flow.
+2. Verify that account's email address.
+3. From the project root, run the bootstrap script against the intended database:
+
+   ```powershell
+   & "C:\Program Files\PostgreSQL\18\bin\psql.exe" -U postgres -d ankush_arya_casting -f prisma/bootstrap-admin.sql
+   ```
+
+4. Enter the exact email address of the verified agency account when prompted.
+5. Confirm the output shows that email with `assigned_role = ADMIN`.
+
+The script runs in a transaction, refuses missing or unverified accounts, creates the `ADMIN` role if needed, and assigns it only to the supplied account. Run it only with agency-owner approval and trusted database credentials. Keep the database password private.
 
 ## Local development
 
@@ -308,7 +326,7 @@ The first version focuses on a private talent database and basic agency administ
 | 3 | Registration and email verification | Implemented and tested locally |
 | 4 | Login, sessions, and logout | Implemented and tested locally |
 | 5 | Role and profile-ownership authorization foundation | Implemented on feature branch; local validation pending |
-| 6 | Admin provisioning and admin operations | Planned |
+| 6 | Initial admin provisioning | Bootstrap SQL script implemented; local execution pending |
 | 7 | Guardian and child artist registration | Planned |
 | 8 | Actor-approved manager access and revocation | Planned |
 | 9 | Talent profile management | Planned |

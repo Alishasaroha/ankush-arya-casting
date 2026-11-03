@@ -1,7 +1,24 @@
 import { createResendVerificationRequest } from "./server/auth/resend-verification";
 import { createServerFn } from "@tanstack/react-start";
 import { sendVerificationEmail } from "./server/email/send-verification-email";
+import { loginSchema } from "./validation/auth";
+import {
+  getSessionCookie,
+  clearSessionCookie,
+} from "./server/auth/session-cookie";
 
+import {
+  getSessionUser,
+  revokeSession,
+} from "./server/auth/session";
+import {
+  authenticateUser,
+  InvalidCredentialsError,
+  EmailNotVerifiedError,
+} from "./server/auth/login";
+
+import { createSession } from "./server/auth/session";
+import { setSessionCookie } from "./server/auth/session-cookie";
 import {
   registerSchema,
   verifyEmailSchema,
@@ -138,3 +155,102 @@ export const registerAdultActorFn = createServerFn({
       };
     }
   });
+  export const loginFn = createServerFn({
+  method: "POST",
+})
+  .validator(loginSchema)
+  .handler(async ({ data }) => {
+    try {
+      // 1. Verify credentials and email status.
+      const user = await authenticateUser(
+        data.email,
+        data.password
+      );
+
+      // 2. Create a database-backed session.
+      const session = await createSession(user.id);
+
+      // 3. Store the raw token in an HTTP-only cookie.
+      setSessionCookie(session.token);
+
+      return {
+        success: true as const,
+        user,
+      };
+    } catch (error) {
+      if (error instanceof InvalidCredentialsError) {
+        return {
+          success: false as const,
+          code: "INVALID_CREDENTIALS" as const,
+          message: "Email or password is incorrect.",
+        };
+      }
+
+      if (error instanceof EmailNotVerifiedError) {
+        return {
+          success: false as const,
+          code: "EMAIL_NOT_VERIFIED" as const,
+          message: error.message,
+        };
+      }
+
+      console.error("Login failed:", error);
+
+      return {
+        success: false as const,
+        code: "LOGIN_FAILED" as const,
+        message: "Unable to sign in. Please try again.",
+      };
+    }
+  });
+  export const getCurrentUserFn = createServerFn({
+  method: "GET",
+}).handler(async () => {
+  const token = getSessionCookie();
+
+  if (!token) {
+    return {
+      authenticated: false as const,
+      user: null,
+    };
+  }
+
+  const user = await getSessionUser(token);
+
+  if (!user || !user.emailVerifiedAt) {
+    await revokeSession(token);
+    clearSessionCookie();
+
+    return {
+      authenticated: false as const,
+      user: null,
+    };
+  }
+
+  return {
+    authenticated: true as const,
+    user: {
+      id: user.userId,
+      email: user.email,
+      roles: user.roles,
+    },
+  };
+});
+export const logoutFn = createServerFn({
+  method: "POST",
+}).handler(async () => {
+  const token = getSessionCookie();
+
+  try {
+    if (token) {
+      await revokeSession(token);
+    }
+  } finally {
+    clearSessionCookie();
+  }
+
+  return {
+    success: true as const,
+    message: "You have been logged out successfully.",
+  };
+});

@@ -53,3 +53,17 @@ export const resendVerificationSchema = z.object({
 export type ResendVerificationInput = z.infer<
   typeof resendVerificationSchema
 >;
+export const loginSchema = z.object({
+  email: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .email("Please enter a valid email address"),
+
+  password: z
+    .string()
+    .min(1, "Password is required")
+    .max(128, "Password is too long"),
+});
+
+export type LoginInput = z.infer<typeof loginSchema>;

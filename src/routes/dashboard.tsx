@@ -1,8 +1,10 @@
 import {
   createFileRoute,
   Link,
+  Outlet,
   redirect,
   useNavigate,
+  useRouterState,
 } from "@tanstack/react-router";
 import { useState } from "react";
 
@@ -36,9 +38,18 @@ export const Route = createFileRoute("/dashboard")({
 function DashboardPage() {
   const { user, profiles } = Route.useRouteContext();
   const navigate = useNavigate();
+  const pathname = useRouterState({
+    select: (state) => state.location.pathname,
+  });
 
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [error, setError] = useState("");
+
+  // This is a parent route. Render its child route instead of the dashboard
+  // when the user opens a nested page such as /dashboard/profile/:profileId.
+  if (pathname.startsWith("/dashboard/profile/")) {
+    return <Outlet />;
+  }
 
   async function handleLogout() {
     setIsLoggingOut(true);

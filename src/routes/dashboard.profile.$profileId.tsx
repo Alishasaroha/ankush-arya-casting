@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 
 import {
   getCurrentUserFn,
@@ -102,12 +102,12 @@ function EditTalentProfilePage() {
   return (
     <main className="min-h-screen bg-background px-6 py-12 md:py-16">
       <div className="mx-auto max-w-3xl">
-        <a
-          href="/dashboard"
+        <Link
+          to="/dashboard"
           className="text-xs uppercase tracking-[0.2em] text-gold underline-offset-4 hover:underline"
         >
           ← Back to dashboard
-        </a>
+        </Link>
 
         <header className="mt-8 border-b hairline pb-6">
           <p className="text-xs uppercase tracking-[0.3em] text-gold">
@@ -237,12 +237,12 @@ function EditTalentProfilePage() {
             >
               {isSaving ? "Saving..." : "Save changes"}
             </button>
-            <a
-              href="/dashboard"
+            <Link
+              to="/dashboard"
               className="text-xs uppercase tracking-widest text-muted-foreground hover:text-foreground"
             >
               Cancel
-            </a>
+            </Link>
           </div>
         </form>
       </div>

@@ -109,6 +109,30 @@ export async function requireTalentProfileAccess(profileId: string) {
       gender: true,
       location: true,
       bio: true,
+      languages: true,
+      experienceYears: true,
+      experienceSummary: true,
+      instagramHandle: true,
+      introVideoUrl: true,
+      links: {
+        orderBy: { sortOrder: "asc" },
+        select: {
+          id: true,
+          type: true,
+          title: true,
+          url: true,
+          sortOrder: true,
+        },
+      },
+      photos: {
+        orderBy: { sortOrder: "asc" },
+        select: {
+          id: true,
+          url: true,
+          altText: true,
+          sortOrder: true,
+        },
+      },
       updatedAt: true,
     },
   });

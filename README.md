@@ -102,7 +102,7 @@ A separate Express API server is not part of the current architecture. Backend o
 - Admin profile access is designed to be agency-wide.
 - The dashboard's profile list is scoped by the signed-in user's role and ownership/guardian relationships.
 - Protected profile-detail and profile-update server functions check access to the requested profile before returning or changing data.
-- The profile editor supports name, date of birth, height, gender, location, and bio; ownership and guardian relationship fields cannot be changed through this form.
+- The profile editor supports personal information, languages, experience, previous-work and portfolio links, Instagram, introduction-video links, and photo asset URLs; ownership and guardian relationship fields cannot be changed through this form.
 
 **Authorization limitations:** Manager access is deliberately not granted until the actor-approved, revocable manager-access relationship is implemented. No public registration flow can assign the ADMIN role. The first agency administrator is provisioned manually by a database owner using `prisma/bootstrap-admin.sql`. Route guards improve navigation but are not a substitute for authorization inside every private server operation.
 
@@ -335,7 +335,7 @@ The first version focuses on a private talent database and basic agency administ
 | 6 | Initial admin provisioning | Bootstrap SQL script implemented; local execution pending |
 | 7 | Guardian and child artist registration | Planned |
 | 8 | Actor-approved manager access and revocation | Planned |
-| 9 | Talent profile management | Implemented on feature branch; local validation pending |
+| 9 | Talent profile management | Extended on feature branch with languages, experience, links and photo metadata; migration and local validation pending |
 | 10 | Admin dashboard and search/filtering | Planned |
 | 11 | Media storage, security hardening, testing, and deployment | Planned |
 

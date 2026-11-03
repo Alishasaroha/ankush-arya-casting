@@ -7,6 +7,11 @@ datasource db {
   provider = "postgresql"
 }
 
+enum TalentLinkType {
+  PREVIOUS_WORK
+  PORTFOLIO
+}
+
 model User {
   id              String    @id @default(uuid()) @db.Uuid
   email           String    @unique
@@ -49,6 +54,12 @@ model TalentProfile {
   location    String?
   bio         String?
 
+  languages         String[] @default([])
+  experienceYears   Int?
+  experienceSummary String?  @db.VarChar(2000)
+  instagramHandle   String?  @db.VarChar(31)
+  introVideoUrl     String?  @db.VarChar(2048)
+
   ownerUserId           String? @unique @db.Uuid
   primaryGuardianUserId String? @db.Uuid
 
@@ -56,8 +67,40 @@ model TalentProfile {
 
   primaryGuardian User? @relation("PrimaryGuardian", fields: [primaryGuardianUserId], references: [id], onDelete: Restrict)
 
+  links  TalentProfileLink[]
+  photos TalentProfilePhoto[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model TalentProfileLink {
+  id              String         @id @default(uuid()) @db.Uuid
+  talentProfileId String         @db.Uuid
+  type            TalentLinkType
+  title           String         @db.VarChar(120)
+  url             String         @db.VarChar(2048)
+  sortOrder       Int            @default(0)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  talentProfile TalentProfile @relation(fields: [talentProfileId], references: [id], onDelete: Cascade)
+
+  @@index([talentProfileId, type, sortOrder])
+}
+
+model TalentProfilePhoto {
+  id              String   @id @default(uuid()) @db.Uuid
+  talentProfileId String   @db.Uuid
+  url             String   @db.VarChar(2048)
+  altText         String?  @db.VarChar(200)
+  sortOrder       Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  talentProfile TalentProfile @relation(fields: [talentProfileId], references: [id], onDelete: Cascade)
+
+  @@index([talentProfileId, sortOrder])
 }
 
 model EmailVerificationToken {

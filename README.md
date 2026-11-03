@@ -101,6 +101,7 @@ A separate Express API server is not part of the current architecture. Backend o
 - Talent-profile access checks for the profile owner and primary guardian.
 - Admin profile access is designed to be agency-wide.
 - The dashboard's profile list is scoped by the signed-in user's role and ownership/guardian relationships.
+- Admins can create unclaimed talent records for actors who have not registered; these records are not linked to a login account.
 - Protected profile-detail and profile-update server functions check access to the requested profile before returning or changing data.
 - The profile editor supports personal information, languages, experience, previous-work and portfolio links, Instagram, introduction-video links, and photo asset URLs; ownership and guardian relationship fields cannot be changed through this form.
 
@@ -160,7 +161,8 @@ ankush-arya-casting/
 │   │   ├── login.tsx
 │   │   ├── verify-email.tsx
 │   │   ├── dashboard.tsx
-│   │   └── dashboard.profile.$profileId.tsx
+│   │   ├── dashboard.profile.$profileId.tsx
+│   │   └── admin.talents.tsx
 │   ├── generated/
 │   │   └── prisma/
 │   ├── routeTree.gen.ts

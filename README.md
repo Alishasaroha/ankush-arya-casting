@@ -4,7 +4,7 @@ A web platform for **Ankush Arya Casting**, a casting agency working with actors
 
 The project combines the agency's public website with a private talent-management platform. The first product release focuses on verified talent accounts, private profiles, and secure agency access.
 
-> **Project status:** Active development. Adult actor registration, email verification, login, database-backed sessions, and the first server-side role/ownership authorization layer have been implemented and tested locally. Guardian/child workflows, manager consent, admin operations, and production hardening remain in progress.
+> **Project status:** Active development. Adult actor registration, email verification, login, database-backed sessions, and the initial role/ownership authorization layer have been implemented and tested locally. Protected talent-profile viewing and editing are implemented on a feature branch and await local validation. Guardian/child workflows, manager consent, admin operations, and production hardening remain in progress.
 
 ---
 
@@ -101,6 +101,8 @@ A separate Express API server is not part of the current architecture. Backend o
 - Talent-profile access checks for the profile owner and primary guardian.
 - Admin profile access is designed to be agency-wide.
 - The dashboard's profile list is scoped by the signed-in user's role and ownership/guardian relationships.
+- Protected profile-detail and profile-update server functions check access to the requested profile before returning or changing data.
+- The profile editor supports name, date of birth, height, gender, location, and bio; ownership and guardian relationship fields cannot be changed through this form.
 
 **Authorization limitations:** Manager access is deliberately not granted until the actor-approved, revocable manager-access relationship is implemented. No public registration flow can assign the ADMIN role. The first agency administrator is provisioned manually by a database owner using `prisma/bootstrap-admin.sql`. Route guards improve navigation but are not a substitute for authorization inside every private server operation.
 
@@ -144,16 +146,19 @@ ankush-arya-casting/
 │   │   │   │   └── verify-email.ts
 │   │   │   ├── email/
 │   │   │   │   └── send-verification-email.ts
+│   │   │   ├── talent-profile.ts
 │   │   │   └── prisma.ts
 │   │   └── validation/
-│   │       └── auth.ts
+│   │       ├── auth.ts
+│   │       └── talent-profile.ts
 │   ├── routes/
 │   │   ├── __root.tsx
 │   │   ├── index.tsx
 │   │   ├── join.tsx
 │   │   ├── login.tsx
 │   │   ├── verify-email.tsx
-│   │   └── dashboard.tsx
+│   │   ├── dashboard.tsx
+│   │   └── dashboard.profile.$profileId.tsx
 │   ├── generated/
 │   │   └── prisma/
 │   ├── routeTree.gen.ts
@@ -189,6 +194,7 @@ Important files:
 | `/verify-email` | Email verification |
 | `/login` | Login |
 | `/dashboard` | Authenticated account dashboard |
+| `/dashboard/profile/$profileId` | Protected talent profile editor |
 | `/work` | Agency work |
 | `/producers` | Information for production professionals |
 | `/contact` | Contact information |
@@ -329,7 +335,7 @@ The first version focuses on a private talent database and basic agency administ
 | 6 | Initial admin provisioning | Bootstrap SQL script implemented; local execution pending |
 | 7 | Guardian and child artist registration | Planned |
 | 8 | Actor-approved manager access and revocation | Planned |
-| 9 | Talent profile management | Planned |
+| 9 | Talent profile management | Implemented on feature branch; local validation pending |
 | 10 | Admin dashboard and search/filtering | Planned |
 | 11 | Media storage, security hardening, testing, and deployment | Planned |
 
@@ -339,7 +345,8 @@ The first version focuses on a private talent database and basic agency administ
 |---|---|
 | `main` | Stable project baseline |
 | `redesign-v1` | Integrated development branch |
-| `feature/role-based-access-control` | Current RBAC implementation branch |
+| `feature/role-based-access-control` | RBAC foundation |
+| `feature/talent-profile-management` | Protected talent profile viewing and editing |
 
 Development guidelines:
 

@@ -104,6 +104,12 @@ export async function requireTalentProfileAccess(profileId: string) {
       fullName: true,
       ownerUserId: true,
       primaryGuardianUserId: true,
+      dateOfBirth: true,
+      heightCm: true,
+      gender: true,
+      location: true,
+      bio: true,
+      updatedAt: true,
     },
   });
 

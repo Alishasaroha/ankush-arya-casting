@@ -126,6 +126,12 @@ function DashboardPage() {
                       .filter(Boolean)
                       .join(" · ") || "Profile details not added yet"}
                   </p>
+                  <a
+                    href={"/dashboard/profile/" + profile.id}
+                    className="mt-3 inline-block text-xs uppercase tracking-widest text-gold underline-offset-4 hover:underline"
+                  >
+                    Edit profile
+                  </a>
                 </article>
               ))}
             </div>

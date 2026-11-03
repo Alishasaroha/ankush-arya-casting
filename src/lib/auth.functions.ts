@@ -23,12 +23,17 @@ import {
 } from "./server/auth/register";
 import { verifyEmailToken } from "./server/auth/verify-email";
 import { sendVerificationEmail } from "./server/email/send-verification-email";
+import { getTalentProfile, updateTalentProfile } from "./server/talent-profile";
 import {
   loginSchema,
   registerSchema,
   resendVerificationSchema,
   verifyEmailSchema,
 } from "./validation/auth";
+import {
+  talentProfileIdSchema,
+  updateTalentProfileSchema,
+} from "./validation/talent-profile";
 
 export const registerAdultActorFn = createServerFn({
   method: "POST",
@@ -218,6 +223,29 @@ export const getMyTalentProfilesFn = createServerFn({
 
   return { profiles };
 });
+
+export const getTalentProfileFn = createServerFn({
+  method: "GET",
+})
+  .validator(talentProfileIdSchema)
+  .handler(async ({ data }) => {
+    const profile = await getTalentProfile(data.profileId);
+
+    return { profile };
+  });
+
+export const updateTalentProfileFn = createServerFn({
+  method: "POST",
+})
+  .validator(updateTalentProfileSchema)
+  .handler(async ({ data }) => {
+    const profile = await updateTalentProfile(data);
+
+    return {
+      success: true as const,
+      profile,
+    };
+  });
 
 export const logoutFn = createServerFn({
   method: "POST",

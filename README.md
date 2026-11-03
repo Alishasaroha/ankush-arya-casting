@@ -2,45 +2,37 @@
 
 A web platform for **Ankush Arya Casting**, a casting agency working with actors and other creative talent across films, advertisements, web series, and digital projects.
 
-The goal is to build a centralized system for talent registration, private profile management, and the agency's internal talent database.
+The project combines the agency's public website with a private talent-management platform. The first product release focuses on verified talent accounts, private profiles, and secure agency access.
 
-> **Project status:** Active development. The website frontend, PostgreSQL/Prisma backend, adult actor registration, and email verification are implemented and tested locally. Login, sessions, authorization, and child artist registration are still under development.
-
----
-
-## Table of Contents
-
-- [About the Project](#about-the-project)
-- [Product Goals](#product-goals)
-- [Technology Stack](#technology-stack)
-- [Implemented So Far](#implemented-so-far)
-- [Project Structure](#project-structure)
-- [Application Routes](#application-routes)
-- [Getting Started](#getting-started)
-- [Environment Configuration](#environment-configuration)
-- [Available Scripts](#available-scripts)
-- [V1 Product Scope](#v1-product-scope)
-- [Development Roadmap](#development-roadmap)
-- [Git Workflow](#git-workflow)
+> **Project status:** Active development. Adult actor registration, email verification, login, database-backed sessions, and the first server-side role/ownership authorization layer have been implemented and tested locally. Guardian/child workflows, manager consent, admin operations, and production hardening remain in progress.
 
 ---
 
-## About the Project
+## Contents
 
-Ankush Arya Casting connects talent with opportunities in the entertainment and advertising industry. This project is intended to support that work with a professional website and an internal talent-management platform.
+- [Product goals](#product-goals)
+- [Technology stack](#technology-stack)
+- [Implemented functionality](#implemented-functionality)
+- [Authorization model](#authorization-model)
+- [Project structure](#project-structure)
+- [Application routes](#application-routes)
+- [Local development](#local-development)
+- [Environment variables](#environment-variables)
+- [Scripts](#scripts)
+- [V1 scope](#v1-scope)
+- [Roadmap](#roadmap)
+- [Git workflow](#git-workflow)
 
-The initial version focuses on building a **private talent database**. Talent profiles are not intended to be publicly browsable.
-
-## Product Goals
+## Product goals
 
 - Provide a professional online presence for the agency.
-- Let actors and other talent create accounts and submit their details.
+- Let adult actors register and verify their email addresses.
 - Support parent- or legal-guardian-managed profiles for child artists.
-- Store talent information in a centralized database.
-- Allow authorized agency staff to search and manage talent profiles.
-- Keep personal information and portfolio material private.
+- Maintain a centralized, private talent database.
+- Allow authorized agency staff to search and manage profiles.
+- Keep personal information and portfolio media private.
 
-## Technology Stack
+## Technology stack
 
 ### Application
 
@@ -48,99 +40,84 @@ The initial version focuses on building a **private talent database**. Talent pr
 |---|---|
 | React | User interface |
 | TypeScript | Type safety |
-| TanStack Start | Full-stack React framework |
+| TanStack Start | Full-stack React framework and server functions |
 | TanStack Router | File-based routing |
-| Vite | Development and production build tooling |
+| Vite | Development and production builds |
 | Tailwind CSS v4 | Styling |
 | ESLint | Code quality |
 
 ### Backend
 
-| Technology | Purpose | Status |
-|---|---|---|
-| PostgreSQL | Relational database | Configured locally |
-| Prisma ORM 7 | Database schema, migrations, and data access | Implemented |
-| Prisma PostgreSQL adapter | Connect Prisma Client to PostgreSQL | Configured |
-| Zod | Request-data validation | Registration and verification schemas implemented |
-| Argon2id (`argon2`) | Password hashing and verification | Implemented and tested |
-| Resend | Transactional email delivery | Integrated and tested locally |
-| Node.js Crypto | Secure random tokens and SHA-256 hashing | Implemented |
-| Object storage | Talent photos and videos | Planned |
+| Technology | Purpose |
+|---|---|
+| PostgreSQL | Relational database |
+| Prisma ORM 7 | Database schema, migrations, and queries |
+| Prisma PostgreSQL adapter | Prisma-to-PostgreSQL connection |
+| Zod | Server request validation |
+| Argon2id (`argon2`) | Password hashing and verification |
+| Node.js Crypto | Secure random tokens and SHA-256 token hashing |
+| Resend | Transactional email delivery |
+| HTTP-only cookies | Browser session credential |
 
-The application uses TanStack Start's server functions for backend operations. A separate Express API server is not part of the current architecture.
+A separate Express API server is not part of the current architecture. Backend operations use TanStack Start server functions and server-only modules.
 
-## Implemented So Far
-
-## Implemented So Far
+## Implemented functionality
 
 ### Website
 
 - Agency homepage and shared site layout.
-- About, talent, work, producers, contact, and join routes.
-- Private-talent positioning; no public talent directory.
-- Adult actor registration interface.
-- Email verification page.
+- About, talent, work, producers, contact, join, login, verification, and dashboard routes.
+- Private-talent positioning; there is no public talent directory.
 
-### Backend and database
+### Registration and email verification
 
-- PostgreSQL database configured locally.
-- Prisma 7 configured with the PostgreSQL adapter.
-- Database models for users, roles, user-role assignments, talent profiles, and email verification tokens.
-- Prisma migrations applied and Prisma Client generated.
-- Database connection tested successfully.
-- Zod validation for registration, verification, and resend requests.
 - Adult actor registration through a TanStack Start server function.
-- Atomic registration transaction for user creation, TALENT role assignment, and talent profile creation.
-- Argon2id password hashing and verification helpers.
+- Zod validation for registration, verification, resend, and login inputs.
+- Argon2id password hashing and verification.
+- Atomic creation of the user, TALENT role assignment, and talent profile.
 - Cryptographically secure 32-byte email verification tokens.
-- SHA-256 token hashing; only token hashes are stored in PostgreSQL.
+- SHA-256 token hashes stored in PostgreSQL; raw verification tokens are not stored.
 - Verification tokens expire after 30 minutes and are consumed during verification.
-- Email verification updates `User.emailVerifiedAt`.
 - Resend verification flow with a 60-second per-account cooldown.
-- Generic resend responses to reduce account enumeration.
-- Resend integration for transactional email delivery.
-- Successful local test of email delivery and account verification in PostgreSQL.
+- Resend responses are generic to reduce account enumeration.
+- Resend email delivery integration.
+- Local email delivery and database account-verification flow tested.
 
-### Current limitations
+### Login and sessions
 
-- Login, logout, and session management are not implemented.
-- Protected routes and server-side authorization are not implemented.
-- Child artist and guardian registration are not implemented.
-- Manager access approval and revocation are planned.
-- Talent profile editing and persistent profile workflows are incomplete.
-- Secure photo and video uploads are not implemented.
-- Admin dashboard, talent search, and filtering are planned.
-- Stronger IP-based/global rate limiting and production email-domain configuration are still required.
+- Login checks the supplied password against the Argon2id hash.
+- Unverified accounts are rejected at login.
+- Seven-day database-backed sessions.
+- Random session tokens stored in the browser only as HTTP-only cookies.
+- Only SHA-256 session-token hashes are stored in PostgreSQL.
+- Current-user lookup validates the session and verified-email status.
+- Logout revokes the database session and clears the cookie.
 
-**Note:** Email verification is working locally, but this does not mean the complete authentication system is production-ready. Do not treat an unverified account as authenticated.
+### Authorization foundation
 
-### Backend foundations
+- Multiple roles per user through the `Role` and `UserRole` tables.
+- Supported application role names: `TALENT`, `GUARDIAN`, `MANAGER`, and `ADMIN`.
+- Server-side helpers for authentication, single-role checks, and any-of-role checks.
+- Talent-profile access checks for the profile owner and primary guardian.
+- Admin profile access is designed to be agency-wide.
+- The dashboard's profile list is scoped by the signed-in user's role and ownership/guardian relationships.
 
-- Local PostgreSQL database created.
-- Prisma 7 configured with the PostgreSQL adapter.
-- Initial database models created for users, roles, user-role assignments, and talent profiles.
-- Initial Prisma migration applied.
-- Database connection tested successfully.
-- Argon2id password hashing and verification helpers implemented and tested.
-- Initial Zod registration validation schema created.
-- TypeScript check and production client/server build completed successfully after the current setup changes.
+**Authorization limitations:** Manager access is deliberately not granted until the actor-approved, revocable manager-access relationship is implemented. No public registration flow can assign the ADMIN role. An administrator bootstrap and controlled role-assignment workflow are still required. Route guards improve navigation but are not a substitute for authorization inside every private server operation.
 
-### Not implemented end to end yet
+## Authorization model
 
-- Registration API/server action.
-- User creation and role assignment through the registration flow.
-- Email verification and account activation.
-- Login, logout, and session management.
-- Authorization enforcement and admin access.
-- Talent profile editing and persistent profile workflows.
-- Secure photo and video uploads.
-- Admin dashboard, talent search, and filtering.
+| Role | Intended access |
+|---|---|
+| `TALENT` | The actor's own talent profile |
+| `GUARDIAN` | Child profiles explicitly assigned to that guardian |
+| `MANAGER` | Only profiles for which the actor has approved manager access; not yet enabled |
+| `ADMIN` | Agency-wide talent management; role provisioning must be controlled |
 
-**Important:** The join page is still a frontend prototype. Submitting it does not create a database account or send a verification email. The password and validation helpers are foundations, not a complete authentication system.
+A role alone does not grant access to every talent profile. Profile-level access also checks the relevant owner or guardian relationship. Manager access will require a separate approval/revocation record and must not be inferred from the MANAGER role alone.
 
-## Project Structure
+## Project structure
 
-The application uses TanStack file-based routing. The structure below highlights the main application and backend areas; some generated and configuration files are omitted.
+The main application structure is shown below. Generated and tooling files are omitted.
 
 ```text
 ankush-arya-casting/
@@ -149,25 +126,33 @@ ankush-arya-casting/
 │   └── schema.prisma
 ├── public/
 ├── src/
-│   ├── assets/
 │   ├── components/
 │   │   └── site/
-│   ├── hooks/
 │   ├── lib/
+│   │   ├── auth.functions.ts
 │   │   ├── server/
-│   │   │   └── auth/
-│   │   │       └── password.ts
+│   │   │   ├── auth/
+│   │   │   │   ├── authorization.ts
+│   │   │   │   ├── login.ts
+│   │   │   │   ├── password.ts
+│   │   │   │   ├── register.ts
+│   │   │   │   ├── resend-verification.ts
+│   │   │   │   ├── session-cookie.ts
+│   │   │   │   ├── session.ts
+│   │   │   │   ├── verification-token.ts
+│   │   │   │   └── verify-email.ts
+│   │   │   ├── email/
+│   │   │   │   └── send-verification-email.ts
+│   │   │   └── prisma.ts
 │   │   └── validation/
 │   │       └── auth.ts
 │   ├── routes/
 │   │   ├── __root.tsx
 │   │   ├── index.tsx
-│   │   ├── about.tsx
-│   │   ├── talent.tsx
 │   │   ├── join.tsx
-│   │   ├── work.tsx
-│   │   ├── producers.tsx
-│   │   └── contact.tsx
+│   │   ├── login.tsx
+│   │   ├── verify-email.tsx
+│   │   └── dashboard.tsx
 │   ├── generated/
 │   │   └── prisma/
 │   ├── routeTree.gen.ts
@@ -177,48 +162,46 @@ ankush-arya-casting/
 ├── prisma7.config.ts
 ├── package.json
 ├── package-lock.json
-├── tsconfig.json
 └── README.md
 ```
 
-### Important Directories and Files
+Important files:
 
-- `src/routes/` — Application pages and route definitions.
-- `src/components/` — Reusable UI components.
-- `src/components/site/` — Shared website components.
-- `src/assets/` — Application assets.
-- `src/hooks/` — Reusable React hooks.
-- `src/lib/server/` — Server-side functionality. Keep database and password operations out of browser code.
-- `src/lib/server/auth/` — Authentication-related helpers, including password hashing.
-- `src/lib/validation/` — Zod schemas for validating input.
+- `src/lib/auth.functions.ts` — TanStack Start server functions.
+- `src/lib/server/auth/` — Server-only authentication, session, and authorization logic.
+- `src/lib/server/email/` — Transactional email delivery.
+- `src/lib/server/prisma.ts` — Prisma database client.
+- `src/lib/validation/auth.ts` — Zod validation schemas.
 - `prisma/schema.prisma` — Database models and relations.
 - `prisma/migrations/` — Database migration history.
-- `src/generated/prisma/` — Generated Prisma Client output; do not edit generated files manually.
-- `routeTree.gen.ts` — Generated by TanStack Router; do not edit manually.
+- `src/generated/prisma/` — Generated Prisma Client; do not edit manually.
+- `src/routeTree.gen.ts` — Generated by TanStack Router; do not edit manually.
 
-## Application Routes
+## Application routes
 
 | Route | Purpose |
 |---|---|
 | `/` | Homepage |
 | `/about` | Agency information |
 | `/talent` | Private talent information |
-| `/join` | Adult actor registration and verification-email resend |
-| `/verify-email` | Email verification using a single-use token |
+| `/join` | Adult actor registration and verification resend |
+| `/verify-email` | Email verification |
+| `/login` | Login |
+| `/dashboard` | Authenticated account dashboard |
 | `/work` | Agency work |
 | `/producers` | Information for production professionals |
 | `/contact` | Contact information |
 
 Some informational pages may still contain demonstration content. Agency work, clients, testimonials, and statistics should be replaced only with details verified by the agency.
 
-## Getting Started
+## Local development
 
 ### Prerequisites
 
-- Node.js (the project has been developed with Node.js 22).
+- Node.js (developed with Node.js 22).
 - npm.
 - Git.
-- PostgreSQL 18 for local backend development.
+- PostgreSQL 18.
 
 ### 1. Clone the repository
 
@@ -233,103 +216,121 @@ cd ankush-arya-casting
 npm install
 ```
 
-## 3. Environment Configuration
+### 3. Configure environment variables
 
-Create a local `.env` file in the project root.
+Create a local `.env` file in the project root. See [Environment variables](#environment-variables).
 
-```env
-DATABASE_URL="postgresql://USER:PASSWORD@localhost:5432/ankush_arya_casting?schema=public"
-
-RESEND_API_KEY="your-resend-api-key"
-EMAIL_FROM="Ankush Arya Casting <onboarding@resend.dev>"
-APP_URL="http://localhost:8080"
 ### 4. Prepare the database
 
-After PostgreSQL is running and the database exists, apply the existing migrations:
+Create the PostgreSQL database, then apply the checked-in migrations:
 
 ```bash
 npx prisma migrate dev
 npx prisma generate
 ```
 
-### 5. Start the development server
+### 5. Start the application
 
 ```bash
 npm run dev
 ```
 
-The development server prints its local URL in the terminal.
+Vite prints the local development URL in the terminal. Set `APP_URL` to that same origin and port.
 
-> The repository does not contain your local database or its credentials. A fresh checkout needs a PostgreSQL instance and a correctly configured `.env` file before database-backed features can run.
+A fresh checkout requires its own PostgreSQL instance, environment variables, and Resend configuration. Local database contents and credentials are not part of this repository.
 
-## Available Scripts
+## Environment variables
+
+Create `.env` in the project root:
+
+```env
+DATABASE_URL="postgresql://USER:PASSWORD@localhost:5432/ankush_arya_casting?schema=public"
+RESEND_API_KEY="your-resend-api-key"
+EMAIL_FROM="Ankush Arya Casting <onboarding@resend.dev>"
+APP_URL="http://localhost:8080"
+```
+
+- `DATABASE_URL` — Local or deployed PostgreSQL connection string.
+- `RESEND_API_KEY` — Private Resend API key.
+- `EMAIL_FROM` — Sender address configured with Resend.
+- `APP_URL` — Application origin used to construct email verification links.
+
+The Resend shared onboarding sender is restricted to limited testing until an agency-owned sending domain is verified. Configure an agency domain before sending production emails to actors.
+
+Never commit `.env`, API keys, database passwords, session cookies, or verification tokens.
+
+## Scripts
 
 | Command | Description |
 |---|---|
-| `npm run dev` | Start the development server |
+| `npm run dev` | Start development server |
 | `npm run lint` | Run ESLint |
-| `npm run build` | Build the client and server for production |
-| `npx tsc --noEmit` | Run TypeScript type checking |
-| `npx prisma validate` | Validate the Prisma schema |
+| `npm run build` | Build client and server |
+| `npx tsc --noEmit` | Type-check without emitting files |
+| `npx prisma validate` | Validate Prisma schema |
 | `npx prisma migrate dev` | Apply development migrations |
 | `npx prisma generate` | Generate Prisma Client |
 
-## V1 Product Scope
+## V1 scope
 
-The first version is intentionally focused on a private talent database and basic agency administration.
+The first version focuses on a private talent database and basic agency administration.
 
-### Talent and account types
+### Included in the intended V1
 
-- Adult actors and other talent can register their own accounts.
-- A parent or legal guardian can manage a child artist's profile.
+- Adult talent accounts.
+- Parent/legal-guardian-managed child profiles.
 - One guardian may manage multiple child profiles.
-- An adult actor's profile is owned by that actor. Any manager access should require the actor's approval and remain revocable.
-
-### Talent information
-
-The planned profile can include personal details, location, height, languages, experience, work links, photos, introduction videos, audition material, and social links.
-
-### Privacy and access
-
-Talent profiles are private by design. Access must be enforced by server-side authentication and authorization—not just by hiding pages or controls in the frontend.
+- Private talent profiles.
+- Server-side authorization for owners, guardians, and agency administrators.
 
 ### Explicitly out of scope for the initial version
 
 - Public talent directory.
 - Casting-requirement management.
 - Availability tracking.
-- AI-based talent matching.
+- AI-based matching.
 - Payments and analytics.
 
-## Development Roadmap
+### Planned privacy rules
+
+- Adult actors own their profiles.
+- Guardians access only child profiles assigned to them.
+- Manager access requires actor approval and remains revocable.
+- Admin access is restricted to explicitly provisioned agency administrators.
+- Private data must be checked in server-side operations, not only hidden in the UI.
+
+## Roadmap
 
 | Phase | Scope | Status |
 |---|---|---|
 | 1 | Website foundation and initial UI | Implemented; content refinement ongoing |
 | 2 | PostgreSQL and Prisma foundation | Implemented |
-| 3 | Password hashing and input validation | Implemented and tested |
-| 4 | Adult actor registration and role assignment | Implemented and tested locally |
-| 5 | Email verification and resend flow | Implemented and tested locally |
-| 6 | Login, sessions, and authorization | Next |
+| 3 | Registration and email verification | Implemented and tested locally |
+| 4 | Login, sessions, and logout | Implemented and tested locally |
+| 5 | Role and profile-ownership authorization foundation | Implemented on feature branch; local validation pending |
+| 6 | Admin provisioning and admin operations | Planned |
 | 7 | Guardian and child artist registration | Planned |
-| 8 | Talent profile management | Planned |
-| 9 | Admin dashboard and talent search/filtering | Planned |
-| 10 | Media storage, security hardening, testing, and deployment | Planned |
+| 8 | Actor-approved manager access and revocation | Planned |
+| 9 | Talent profile management | Planned |
+| 10 | Admin dashboard and search/filtering | Planned |
+| 11 | Media storage, security hardening, testing, and deployment | Planned |
 
-## Git Workflow
+## Git workflow
 
 | Branch | Purpose |
 |---|---|
 | `main` | Stable project baseline |
-| `redesign-v1` | Current development branch for UI and backend work |
+| `redesign-v1` | Integrated development branch |
+| `feature/role-based-access-control` | Current RBAC implementation branch |
 
-### Development Guidelines
+Development guidelines:
 
-- Create checkpoints before major changes.
-- Run type checks and builds after meaningful changes.
+- Keep `main` stable.
+- Build larger features on dedicated branches.
+- Run TypeScript checks, linting, builds, and relevant database tests before merging.
 - Keep commits focused and descriptive.
 - Never commit secrets, local environment files, or database credentials.
-- Review and test changes before merging into `main`.
+- Review and test changes before merging into `redesign-v1` or `main`.
 
 ---
 

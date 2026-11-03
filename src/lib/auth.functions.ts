@@ -1,36 +1,34 @@
-import { createResendVerificationRequest } from "./server/auth/resend-verification";
 import { createServerFn } from "@tanstack/react-start";
-import { sendVerificationEmail } from "./server/email/send-verification-email";
-import { loginSchema } from "./validation/auth";
-import {
-  getSessionCookie,
-  clearSessionCookie,
-} from "./server/auth/session-cookie";
 
-import {
-  getSessionUser,
-  revokeSession,
-} from "./server/auth/session";
+import { createResendVerificationRequest } from "./server/auth/resend-verification";
 import {
   authenticateUser,
   InvalidCredentialsError,
   EmailNotVerifiedError,
 } from "./server/auth/login";
-
-import { createSession } from "./server/auth/session";
-import { setSessionCookie } from "./server/auth/session-cookie";
 import {
-  registerSchema,
-  verifyEmailSchema,
-  resendVerificationSchema,
-} from "./validation/auth";
-import { verifyEmailToken } from "./server/auth/verify-email";
-
+  getAuthenticatedUser,
+  listAccessibleTalentProfiles,
+} from "./server/auth/authorization";
+import { createSession, revokeSession } from "./server/auth/session";
+import {
+  clearSessionCookie,
+  getSessionCookie,
+  setSessionCookie,
+} from "./server/auth/session-cookie";
 import {
   registerAdultActor,
   RegistrationValidationError,
   EmailAlreadyRegisteredError,
 } from "./server/auth/register";
+import { verifyEmailToken } from "./server/auth/verify-email";
+import { sendVerificationEmail } from "./server/email/send-verification-email";
+import {
+  loginSchema,
+  registerSchema,
+  resendVerificationSchema,
+  verifyEmailSchema,
+} from "./validation/auth";
 
 export const registerAdultActorFn = createServerFn({
   method: "POST",
@@ -38,11 +36,9 @@ export const registerAdultActorFn = createServerFn({
   .validator(registerSchema)
   .handler(async ({ data }) => {
     try {
-      // 1. Create account and generate verification token.
       const registeredActor = await registerAdultActor(data);
 
       try {
-        // 2. Send verification email.
         await sendVerificationEmail({
           to: registeredActor.user.email,
           fullName: registeredActor.profile.fullName,
@@ -55,16 +51,15 @@ export const registerAdultActorFn = createServerFn({
             "Account created successfully! Please check your email to verify your account.",
         };
       } catch (emailError) {
-        // Account exists even if email delivery fails.
         console.error(
           "Verification email delivery failed:",
-          emailError instanceof Error ? emailError.message : "Unknown error"
+          emailError instanceof Error ? emailError.message : "Unknown error",
         );
 
         return {
           success: true as const,
           message:
-            "Your account was created, but we couldn't send the verification email. Please contact Ankush Arya Casting for assistance.",
+            "Your account was created, but we couldn't send the verification email. Please request a new verification email.",
         };
       }
     } catch (error) {
@@ -94,7 +89,7 @@ export const registerAdultActorFn = createServerFn({
     }
   });
 
-  export const verifyEmailFn = createServerFn({
+export const verifyEmailFn = createServerFn({
   method: "POST",
 })
   .validator(verifyEmailSchema)
@@ -111,18 +106,15 @@ export const registerAdultActorFn = createServerFn({
       };
     }
   });
-  export const resendVerificationFn = createServerFn({
+
+export const resendVerificationFn = createServerFn({
   method: "POST",
 })
   .validator(resendVerificationSchema)
   .handler(async ({ data }) => {
     try {
-      // Generate a fresh token for an eligible account.
-      const request = await createResendVerificationRequest(
-        data.email
-      );
+      const request = await createResendVerificationRequest(data.email);
 
-      // Send email only when an eligible request exists.
       if (request) {
         try {
           await sendVerificationEmail({
@@ -135,12 +127,11 @@ export const registerAdultActorFn = createServerFn({
             "Resend verification email failed:",
             emailError instanceof Error
               ? emailError.message
-              : "Unknown error"
+              : "Unknown error",
           );
         }
       }
 
-      // Always return a generic response.
       return {
         success: true as const,
         message:
@@ -155,22 +146,16 @@ export const registerAdultActorFn = createServerFn({
       };
     }
   });
-  export const loginFn = createServerFn({
+
+export const loginFn = createServerFn({
   method: "POST",
 })
   .validator(loginSchema)
   .handler(async ({ data }) => {
     try {
-      // 1. Verify credentials and email status.
-      const user = await authenticateUser(
-        data.email,
-        data.password
-      );
-
-      // 2. Create a database-backed session.
+      const user = await authenticateUser(data.email, data.password);
       const session = await createSession(user.id);
 
-      // 3. Store the raw token in an HTTP-only cookie.
       setSessionCookie(session.token);
 
       return {
@@ -203,24 +188,13 @@ export const registerAdultActorFn = createServerFn({
       };
     }
   });
-  export const getCurrentUserFn = createServerFn({
+
+export const getCurrentUserFn = createServerFn({
   method: "GET",
 }).handler(async () => {
-  const token = getSessionCookie();
+  const user = await getAuthenticatedUser();
 
-  if (!token) {
-    return {
-      authenticated: false as const,
-      user: null,
-    };
-  }
-
-  const user = await getSessionUser(token);
-
-  if (!user || !user.emailVerifiedAt) {
-    await revokeSession(token);
-    clearSessionCookie();
-
+  if (!user) {
     return {
       authenticated: false as const,
       user: null,
@@ -236,6 +210,15 @@ export const registerAdultActorFn = createServerFn({
     },
   };
 });
+
+export const getMyTalentProfilesFn = createServerFn({
+  method: "GET",
+}).handler(async () => {
+  const profiles = await listAccessibleTalentProfiles();
+
+  return { profiles };
+});
+
 export const logoutFn = createServerFn({
   method: "POST",
 }).handler(async () => {

@@ -195,6 +195,7 @@ Important files:
 | `/login` | Login |
 | `/dashboard` | Authenticated account dashboard |
 | `/dashboard/profile/$profileId` | Protected talent profile editor |
+| `/admin/talents` | Admin-only talent directory with server-side search and filters |
 | `/work` | Agency work |
 | `/producers` | Information for production professionals |
 | `/contact` | Contact information |
@@ -336,7 +337,7 @@ The first version focuses on a private talent database and basic agency administ
 | 7 | Guardian and child artist registration | Planned |
 | 8 | Actor-approved manager access and revocation | Planned |
 | 9 | Talent profile management | Extended on feature branch with languages, experience, links and photo metadata; migration and local validation pending |
-| 10 | Admin dashboard and search/filtering | Planned |
+| 10 | Admin talent directory with search, filters, and pagination | Implemented on feature branch; admin-role access setup remains pending |
 | 11 | Media storage, security hardening, testing, and deployment | Planned |
 
 ## Git workflow

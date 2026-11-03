@@ -14,7 +14,7 @@ import {
   logoutFn,
 } from "@/lib/auth.functions";
 
-import { LogOut, ShieldCheck } from "lucide-react";
+import { LogOut, ShieldCheck, Users } from "lucide-react";
 
 export const Route = createFileRoute("/dashboard")({
   beforeLoad: async () => {
@@ -83,7 +83,17 @@ function DashboardPage() {
             </h1>
           </div>
 
-          <button
+          <div className="flex items-center gap-3">
+            {user.roles.includes("ADMIN") && (
+              <a
+                href="/admin/talents"
+                className="inline-flex items-center gap-2 border hairline px-4 py-3 text-xs uppercase tracking-widest hover:border-gold"
+              >
+                <Users className="h-4 w-4" />
+                Talent Directory
+              </a>
+            )}
+            <button
             type="button"
             onClick={handleLogout}
             disabled={isLoggingOut}
@@ -91,7 +101,8 @@ function DashboardPage() {
           >
             <LogOut className="h-4 w-4" />
             {isLoggingOut ? "Signing Out..." : "Logout"}
-          </button>
+            </button>
+          </div>
         </div>
 
         <section className="mt-12 border hairline bg-surface p-8">

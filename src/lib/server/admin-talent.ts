@@ -50,7 +50,7 @@ export async function searchAdminTalentProfiles(
     conditions.push({ languages: { has: filters.language } });
   }
 
-  const dateOfBirth: Prisma.DateTimeFilter = {};
+  const dateOfBirth: Prisma.DateTimeNullableFilter<"TalentProfile"> = {};
   if (filters.minAge !== null) {
     dateOfBirth.lte = subtractYearsFromToday(filters.minAge);
   }

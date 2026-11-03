@@ -4,7 +4,7 @@ A web platform for **Ankush Arya Casting**, a casting agency working with actors
 
 The project combines the agency's public website with a private talent-management platform. The first product release focuses on verified talent accounts, private profiles, and secure agency access.
 
-> **Project status:** Active development. Adult actor registration, email verification, login, database-backed sessions, and the initial role/ownership authorization layer have been implemented and tested locally. Protected talent-profile viewing and editing are implemented on a feature branch and await local validation. Guardian/child workflows, manager consent, admin operations, and production hardening remain in progress.
+> **Project status:** Active development. Adult actor registration, email verification, login, database-backed sessions, and the initial role/ownership authorization layer have been implemented and tested locally. Expanded talent-profile editing and the Admin-only talent directory are implemented on a feature branch. The profile migration, TypeScript check, and production build have passed locally; interactive profile-save verification and first-admin provisioning remain pending. Guardian/child workflows, manager consent, and production hardening are still in progress.
 
 ---
 
@@ -336,8 +336,8 @@ The first version focuses on a private talent database and basic agency administ
 | 6 | Initial admin provisioning | Bootstrap SQL script implemented; local execution pending |
 | 7 | Guardian and child artist registration | Planned |
 | 8 | Actor-approved manager access and revocation | Planned |
-| 9 | Talent profile management | Extended on feature branch with languages, experience, links and photo metadata; migration and local validation pending |
-| 10 | Admin talent directory with search, filters, and pagination | Implemented on feature branch; admin-role access setup remains pending |
+| 9 | Talent profile management | Expanded editor implemented; migration, TypeScript check, and production build passed locally; interactive save verification pending |
+| 10 | Admin talent directory with search, filters, and pagination | Implemented on feature branch; first-admin provisioning and access test pending |
 | 11 | Media storage, security hardening, testing, and deployment | Planned |
 
 ## Git workflow

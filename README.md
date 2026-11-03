@@ -4,7 +4,7 @@ A web platform for **Ankush Arya Casting**, a casting agency working with actors
 
 The goal is to build a centralized system for talent registration, private profile management, and the agency's internal talent database.
 
-> **Project status:** Active development. The website frontend and initial backend foundations are in place. The registration and authentication flows are not yet connected end to end.
+> **Project status:** Active development. The website frontend, PostgreSQL/Prisma backend, adult actor registration, and email verification are implemented and tested locally. Login, sessions, authorization, and child artist registration are still under development.
 
 ---
 
@@ -54,19 +54,22 @@ The initial version focuses on building a **private talent database**. Talent pr
 | Tailwind CSS v4 | Styling |
 | ESLint | Code quality |
 
-### Backend foundation
+### Backend
 
 | Technology | Purpose | Status |
 |---|---|---|
-| PostgreSQL | Relational database | Set up locally |
-| Prisma ORM 7 | Database schema, migrations, and data access | Installed and initial schema migrated |
+| PostgreSQL | Relational database | Configured locally |
+| Prisma ORM 7 | Database schema, migrations, and data access | Implemented |
 | Prisma PostgreSQL adapter | Connect Prisma Client to PostgreSQL | Configured |
-| Zod | Request-data validation | Installed; initial registration schema created |
+| Zod | Request-data validation | Registration and verification schemas implemented |
 | Argon2id (`argon2`) | Password hashing and verification | Implemented and tested |
-| Email service | Email verification | To be selected and integrated |
+| Resend | Transactional email delivery | Integrated and tested locally |
+| Node.js Crypto | Secure random tokens and SHA-256 hashing | Implemented |
 | Object storage | Talent photos and videos | Planned |
 
-The application uses TanStack Start's server capabilities; a separate Express API server is not part of the current architecture.
+The application uses TanStack Start's server functions for backend operations. A separate Express API server is not part of the current architecture.
+
+## Implemented So Far
 
 ## Implemented So Far
 
@@ -74,9 +77,42 @@ The application uses TanStack Start's server capabilities; a separate Express AP
 
 - Agency homepage and shared site layout.
 - About, talent, work, producers, contact, and join routes.
-- Responsive visual foundation.
 - Private-talent positioning; no public talent directory.
-- Registration interface prototype for adult actors and child artists.
+- Adult actor registration interface.
+- Email verification page.
+
+### Backend and database
+
+- PostgreSQL database configured locally.
+- Prisma 7 configured with the PostgreSQL adapter.
+- Database models for users, roles, user-role assignments, talent profiles, and email verification tokens.
+- Prisma migrations applied and Prisma Client generated.
+- Database connection tested successfully.
+- Zod validation for registration, verification, and resend requests.
+- Adult actor registration through a TanStack Start server function.
+- Atomic registration transaction for user creation, TALENT role assignment, and talent profile creation.
+- Argon2id password hashing and verification helpers.
+- Cryptographically secure 32-byte email verification tokens.
+- SHA-256 token hashing; only token hashes are stored in PostgreSQL.
+- Verification tokens expire after 30 minutes and are consumed during verification.
+- Email verification updates `User.emailVerifiedAt`.
+- Resend verification flow with a 60-second per-account cooldown.
+- Generic resend responses to reduce account enumeration.
+- Resend integration for transactional email delivery.
+- Successful local test of email delivery and account verification in PostgreSQL.
+
+### Current limitations
+
+- Login, logout, and session management are not implemented.
+- Protected routes and server-side authorization are not implemented.
+- Child artist and guardian registration are not implemented.
+- Manager access approval and revocation are planned.
+- Talent profile editing and persistent profile workflows are incomplete.
+- Secure photo and video uploads are not implemented.
+- Admin dashboard, talent search, and filtering are planned.
+- Stronger IP-based/global rate limiting and production email-domain configuration are still required.
+
+**Note:** Email verification is working locally, but this does not mean the complete authentication system is production-ready. Do not treat an unverified account as authenticated.
 
 ### Backend foundations
 
@@ -167,7 +203,8 @@ ankush-arya-casting/
 | `/` | Homepage |
 | `/about` | Agency information |
 | `/talent` | Private talent information |
-| `/join` | Registration interface prototype |
+| `/join` | Adult actor registration and verification-email resend |
+| `/verify-email` | Email verification using a single-use token |
 | `/work` | Agency work |
 | `/producers` | Information for production professionals |
 | `/contact` | Contact information |
@@ -196,16 +233,16 @@ cd ankush-arya-casting
 npm install
 ```
 
-### 3. Configure the environment
+## 3. Environment Configuration
 
-Create a local `.env` file in the project root and add your PostgreSQL connection string:
+Create a local `.env` file in the project root.
 
 ```env
 DATABASE_URL="postgresql://USER:PASSWORD@localhost:5432/ankush_arya_casting?schema=public"
-```
 
-Replace `USER` and `PASSWORD` with your local PostgreSQL credentials. Never commit the real `.env` file or share database credentials.
-
+RESEND_API_KEY="your-resend-api-key"
+EMAIL_FROM="Ankush Arya Casting <onboarding@resend.dev>"
+APP_URL="http://localhost:8080"
 ### 4. Prepare the database
 
 After PostgreSQL is running and the database exists, apply the existing migrations:
@@ -269,14 +306,15 @@ Talent profiles are private by design. Access must be enforced by server-side au
 | Phase | Scope | Status |
 |---|---|---|
 | 1 | Website foundation and initial UI | Implemented; content refinement ongoing |
-| 2 | PostgreSQL and Prisma foundation | Initial setup and migration completed |
-| 3 | Password hashing and input validation | Helpers and initial schema implemented and tested |
-| 4 | Registration flow and role assignment | Next |
-| 5 | Email verification and account activation | Planned |
-| 6 | Login, sessions, and authorization | Planned |
-| 7 | Talent profile management | Planned |
-| 8 | Admin dashboard and talent search/filtering | Planned |
-| 9 | Media storage, testing, and deployment | Planned |
+| 2 | PostgreSQL and Prisma foundation | Implemented |
+| 3 | Password hashing and input validation | Implemented and tested |
+| 4 | Adult actor registration and role assignment | Implemented and tested locally |
+| 5 | Email verification and resend flow | Implemented and tested locally |
+| 6 | Login, sessions, and authorization | Next |
+| 7 | Guardian and child artist registration | Planned |
+| 8 | Talent profile management | Planned |
+| 9 | Admin dashboard and talent search/filtering | Planned |
+| 10 | Media storage, security hardening, testing, and deployment | Planned |
 
 ## Git Workflow
 

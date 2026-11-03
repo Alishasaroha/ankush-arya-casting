@@ -3,6 +3,10 @@ import { useState } from "react";
 import type { FormEvent, ReactNode, ChangeEvent } from "react";
 import { PageHero } from "@/components/site/PageHero";
 import { ShieldCheck, User, Users, Lock, Mail, AlertCircle, ArrowRight } from "lucide-react";
+import {
+  registerAdultActorFn,
+  resendVerificationFn,
+} from "@/lib/auth.functions";
 
 export const Route = createFileRoute("/join")({
     head: () => ({
@@ -62,7 +66,9 @@ function Join() {
     const [guardianRelationship, setGuardianRelationship] = useState("Parent");
     const [validationError, setValidationError] = useState<string | null>(null);
     const [formNotice, setFormNotice] = useState<string | null>(null);
-
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isResending, setIsResending] = useState(false);
+const [resendNotice, setResendNotice] = useState<string | null>(null);
     const isChildArtist = accountType === "child_artist";
 
     function handleAccountTypeChange(type: AccountType) {
@@ -76,53 +82,103 @@ function Join() {
         }
     }
 
-    function handleSubmit(e: FormEvent<HTMLFormElement>) {
-        e.preventDefault();
-        setValidationError(null);
-        setFormNotice(null);
+async function handleSubmit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
 
-        // Required field validation
-        if (accountType === "actor" && !fullName.trim()) {
-            setValidationError("Please enter your full legal name.");
-            return;
-        }
+    setValidationError(null);
+    setFormNotice(null);
 
-        if (accountType === "child_artist") {
-            if (!guardianName.trim()) {
-                setValidationError("Please enter the parent or legal guardian's full name.");
-                return;
-            }
-            if (!guardianRelationship.trim()) {
-                setValidationError("Please enter your relationship to the child artist.");
-                return;
-            }
-            if (!childName.trim()) {
-                setValidationError("Please enter the child artist's full name.");
-                return;
-            }
-        }
-
-        if (!email.trim()) {
-            setValidationError("Please enter your email address.");
-            return;
-        }
-
-        // Password validation
-        if (password.length < 8) {
-            setValidationError("Password must be at least 8 characters in length.");
-            return;
-        }
-
-        if (password !== confirmPassword) {
-            setValidationError("Passwords do not match. Please ensure both passwords are identical.");
-            return;
-        }
-
-        // Unmistakably clear UI-only prototype message (no account created, no email sent)
-        setFormNotice(
-            `UI Prototype Notice: No account has been created and no verification email has been sent to ${email}. This interface is currently a front-end demonstration; backend authentication and email verification will be connected in a future update.`
+    // Child registration is not implemented yet.
+    if (isChildArtist) {
+        setValidationError(
+            "Child artist registration is not available yet. Please check back later."
         );
+        return;
     }
+
+    // Frontend validation
+    if (!fullName.trim()) {
+        setValidationError("Please enter your full legal name.");
+        return;
+    }
+
+    if (!email.trim()) {
+        setValidationError("Please enter your email address.");
+        return;
+    }
+
+    if (password.length < 8) {
+        setValidationError("Password must be at least 8 characters.");
+        return;
+    }
+
+    if (password !== confirmPassword) {
+        setValidationError("Passwords do not match.");
+        return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+        const result = await registerAdultActorFn({
+            data: {
+                fullName,
+                email,
+                password,
+                confirmPassword,
+            },
+        });
+
+        if (result.success) {
+            setFormNotice(result.message);
+            setPassword("");
+            setConfirmPassword("");
+        } else if (result.code === "VALIDATION_ERROR") {
+            const firstError = Object.values(result.fieldErrors)
+                .flat()[0];
+
+            setValidationError(
+                firstError ?? "Please check your registration details."
+            );
+        } else {
+            setValidationError(result.message);
+        }
+    } catch (error) {
+        console.error("Registration request failed:", error);
+
+        setValidationError(
+            "Unable to complete registration. Please try again."
+        );
+    } finally {
+        setIsSubmitting(false);
+    }
+}
+async function handleResendVerification() {
+    setResendNotice(null);
+
+    if (!email.trim()) {
+        setResendNotice("Please enter your registered email address.");
+        return;
+    }
+
+    setIsResending(true);
+
+    try {
+        const result = await resendVerificationFn({
+            data: { email },
+        });
+
+        setResendNotice(result.message);
+    } catch (error) {
+        console.error("Resend request failed:", error);
+
+        setResendNotice(
+            "Unable to process your request. Please try again."
+        );
+    } finally {
+        setIsResending(false);
+    }
+}
 
     return (
         <>
@@ -330,7 +386,7 @@ function Join() {
                                 placeholder="name@example.com"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                helperText="Email verification will be required when registration is enabled."
+                                helperText="Email verification is not enabled yet."
                             />
 
                             <div className="grid gap-6 md:grid-cols-2">
@@ -397,25 +453,76 @@ function Join() {
                                 <Mail className="h-5 w-5 text-gold shrink-0 mt-0.5" />
                                 <div className="space-y-1">
                                     <div className="font-medium text-gold text-xs uppercase tracking-wider">
-                                        Front-End Prototype Notice — No Account Created
+                                        Account Created — Verification Pending
                                     </div>
                                     <p className="text-xs text-muted-foreground leading-relaxed">{formNotice}</p>
+                                    <button
+    type="button"
+    onClick={handleResendVerification}
+    disabled={isResending}
+    className="mt-4 text-xs uppercase tracking-widest text-gold underline disabled:opacity-50"
+>
+    {isResending ? "Sending..." : "Resend verification email"}
+</button>
+
+{resendNotice && (
+    <p
+        role="status"
+        className="mt-3 text-xs text-muted-foreground"
+    >
+        {resendNotice}
+    </p>
+)}
                                 </div>
                             </div>
                         )}
+{/* Resend verification for existing accounts */}
+<div className="border-t hairline pt-8 space-y-4">
+    <div>
+        <h3 className="font-display text-2xl">
+            Already registered?
+        </h3>
 
+        <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
+            Enter your registered email address above and request
+            a fresh verification link.
+        </p>
+    </div>
+
+    <button
+        type="button"
+        onClick={handleResendVerification}
+        disabled={isResending || !email.trim()}
+        className="border border-gold text-gold px-6 py-4 text-xs tracking-widest uppercase hover:bg-gold hover:text-primary-foreground transition-colors disabled:opacity-50"
+    >
+        {isResending
+            ? "Sending..."
+            : "Resend Verification Email"}
+    </button>
+
+    {resendNotice && (
+        <p
+            role="status"
+            aria-live="polite"
+            className="text-xs text-muted-foreground"
+        >
+            {resendNotice}
+        </p>
+    )}
+</div>
                         {/* Submission and Action */}
                         <div className="pt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
                             <div className="text-xs text-muted-foreground max-w-sm leading-relaxed">
-                                By continuing, you acknowledge that this is a registration preview. Account creation and email verification are not yet enabled.
+                               Account creation is enabled. Email verification and sign-in are not yet available.
                             </div>
                             <button
-                                type="submit"
-                                className="inline-flex items-center justify-center gap-3 bg-gold text-primary-foreground px-8 py-4 text-[11px] tracking-[0.28em] uppercase hover:bg-foreground hover:text-background transition-colors font-medium shrink-0 cursor-pointer"
-                            >
-                                Register Account
-                                <ArrowRight className="h-4 w-4" />
-                            </button>
+    type="submit"
+    disabled={isSubmitting}
+    className="inline-flex items-center justify-center gap-3 bg-gold text-primary-foreground px-8 py-4 text-[11px] tracking-[0.28em] uppercase hover:bg-foreground hover:text-background transition-colors font-medium shrink-0 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+>
+    {isSubmitting ? "Creating Account..." : "Register Account"}
+    <ArrowRight className="h-4 w-4" />
+</button>
                         </div>
                     </form>
                 </div>

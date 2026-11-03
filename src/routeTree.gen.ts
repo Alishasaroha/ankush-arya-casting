@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WorkRouteImport } from './routes/work'
+import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as TalentRouteImport } from './routes/talent'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ProducersRouteImport } from './routes/producers'
@@ -21,6 +22,11 @@ import { Route as IndexRouteImport } from './routes/index'
 const WorkRoute = WorkRouteImport.update({
   id: '/work',
   path: '/work',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VerifyEmailRoute = VerifyEmailRouteImport.update({
+  id: '/verify-email',
+  path: '/verify-email',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TalentRoute = TalentRouteImport.update({
@@ -67,6 +73,7 @@ export interface FileRoutesByFullPath {
   '/producers': typeof ProducersRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/talent': typeof TalentRoute
+  '/verify-email': typeof VerifyEmailRoute
   '/work': typeof WorkRoute
 }
 export interface FileRoutesByTo {
@@ -77,6 +84,7 @@ export interface FileRoutesByTo {
   '/producers': typeof ProducersRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/talent': typeof TalentRoute
+  '/verify-email': typeof VerifyEmailRoute
   '/work': typeof WorkRoute
 }
 export interface FileRoutesById {
@@ -88,6 +96,7 @@ export interface FileRoutesById {
   '/producers': typeof ProducersRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/talent': typeof TalentRoute
+  '/verify-email': typeof VerifyEmailRoute
   '/work': typeof WorkRoute
 }
 export interface FileRouteTypes {
@@ -100,6 +109,7 @@ export interface FileRouteTypes {
     | '/producers'
     | '/sitemap.xml'
     | '/talent'
+    | '/verify-email'
     | '/work'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -110,6 +120,7 @@ export interface FileRouteTypes {
     | '/producers'
     | '/sitemap.xml'
     | '/talent'
+    | '/verify-email'
     | '/work'
   id:
     | '__root__'
@@ -120,6 +131,7 @@ export interface FileRouteTypes {
     | '/producers'
     | '/sitemap.xml'
     | '/talent'
+    | '/verify-email'
     | '/work'
   fileRoutesById: FileRoutesById
 }
@@ -131,6 +143,7 @@ export interface RootRouteChildren {
   ProducersRoute: typeof ProducersRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TalentRoute: typeof TalentRoute
+  VerifyEmailRoute: typeof VerifyEmailRoute
   WorkRoute: typeof WorkRoute
 }
 
@@ -141,6 +154,13 @@ declare module '@tanstack/react-router' {
       path: '/work'
       fullPath: '/work'
       preLoaderRoute: typeof WorkRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/verify-email': {
+      id: '/verify-email'
+      path: '/verify-email'
+      fullPath: '/verify-email'
+      preLoaderRoute: typeof VerifyEmailRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/talent': {
@@ -203,6 +223,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProducersRoute: ProducersRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TalentRoute: TalentRoute,
+  VerifyEmailRoute: VerifyEmailRoute,
   WorkRoute: WorkRoute,
 }
 export const routeTree = rootRouteImport

@@ -134,6 +134,7 @@ ankush-arya-casting/
 │   ├── lib/
 │   │   ├── auth.functions.ts
 │   │   ├── server/
+│   │   │   ├── admin-talent.ts
 │   │   │   ├── auth/
 │   │   │   │   ├── authorization.ts
 │   │   │   │   ├── login.ts
@@ -149,6 +150,7 @@ ankush-arya-casting/
 │   │   │   ├── talent-profile.ts
 │   │   │   └── prisma.ts
 │   │   └── validation/
+│   │       ├── admin-talent.ts
 │   │       ├── auth.ts
 │   │       └── talent-profile.ts
 │   ├── routes/
@@ -175,9 +177,11 @@ Important files:
 
 - `src/lib/auth.functions.ts` — TanStack Start server functions.
 - `src/lib/server/auth/` — Server-only authentication, session, and authorization logic.
+- `src/lib/server/admin-talent.ts` — Admin-only server-side talent search, filters, and pagination.
 - `src/lib/server/email/` — Transactional email delivery.
 - `src/lib/server/prisma.ts` — Prisma database client.
-- `src/lib/validation/auth.ts` — Zod validation schemas.
+- `src/lib/validation/auth.ts` — Authentication Zod validation schemas.
+- `src/lib/validation/admin-talent.ts` — Admin directory filter validation.
 - `prisma/schema.prisma` — Database models and relations.
 - `prisma/migrations/` — Database migration history.
 - `src/generated/prisma/` — Generated Prisma Client; do not edit manually.

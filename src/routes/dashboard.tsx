@@ -94,13 +94,13 @@ function DashboardPage() {
               </a>
             )}
             <button
-            type="button"
-            onClick={handleLogout}
-            disabled={isLoggingOut}
-            className="inline-flex items-center gap-2 border hairline px-5 py-3 text-xs uppercase tracking-widest hover:border-gold disabled:opacity-50"
-          >
-            <LogOut className="h-4 w-4" />
-            {isLoggingOut ? "Signing Out..." : "Logout"}
+              type="button"
+              onClick={handleLogout}
+              disabled={isLoggingOut}
+              className="inline-flex items-center gap-2 border hairline px-5 py-3 text-xs uppercase tracking-widest hover:border-gold disabled:opacity-50"
+            >
+              <LogOut className="h-4 w-4" />
+              {isLoggingOut ? "Signing Out..." : "Logout"}
             </button>
           </div>
         </div>

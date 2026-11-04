@@ -57,6 +57,7 @@ The project combines the agency's public website with a private talent-managemen
 | Argon2id (`argon2`) | Password hashing and verification |
 | Node.js Crypto | Secure random tokens and SHA-256 token hashing |
 | Nodemailer | Gmail SMTP email delivery for initial development |
+| ImageKit | Private profile-photo storage and signed image delivery |
 | HTTP-only cookies | Browser session credential |
 
 A separate Express API server is not part of the current architecture. Backend operations use TanStack Start server functions and server-only modules.

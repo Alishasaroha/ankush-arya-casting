@@ -100,6 +100,8 @@ model TalentProfilePhoto {
   id              String   @id @default(uuid()) @db.Uuid
   talentProfileId String   @db.Uuid
   url             String   @db.VarChar(2048)
+  fileId          String?  @unique @db.VarChar(64)
+  filePath        String?  @db.VarChar(2048)
   altText         String?  @db.VarChar(200)
   sortOrder       Int      @default(0)
   createdAt       DateTime @default(now())

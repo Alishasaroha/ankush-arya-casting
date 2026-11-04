@@ -100,25 +100,28 @@ export async function uploadTalentProfilePhoto(input: {
 
   const fileName = `talent-${randomUUID()}.${imageType.extension}`;
   const imageKit = getImageKitClient();
-  let uploadedFileId: string | undefined;
+  const uploaded = await imageKit.files.upload({
+    file: await toFile(Buffer.from(bytes), fileName),
+    fileName,
+    folder: `/ankush-arya-casting/talent/${input.profileId}`,
+    useUniqueFileName: true,
+    overwriteFile: false,
+    isPrivateFile: true,
+  });
+
+  if (!uploaded.fileId || !uploaded.filePath || !uploaded.url) {
+    throw new Error("ImageKit did not return the expected uploaded-file details.");
+  }
+
+  let photo: {
+    id: string;
+    altText: string | null;
+    sortOrder: number;
+    filePath: string;
+  };
 
   try {
-    const uploaded = await imageKit.files.upload({
-      file: await toFile(Buffer.from(bytes), fileName),
-      fileName,
-      folder: `/ankush-arya-casting/talent/${input.profileId}`,
-      useUniqueFileName: true,
-      overwriteFile: false,
-      isPrivateFile: true,
-    });
-
-    uploadedFileId = uploaded.fileId;
-
-    if (!uploaded.fileId || !uploaded.filePath || !uploaded.url) {
-      throw new Error("ImageKit did not return the expected uploaded-file details.");
-    }
-
-    const photo = await prisma.talentProfilePhoto.create({
+    photo = await prisma.talentProfilePhoto.create({
       data: {
         talentProfileId: input.profileId,
         url: uploaded.url,
@@ -134,25 +137,23 @@ export async function uploadTalentProfilePhoto(input: {
         filePath: true,
       },
     });
-
-    return {
-      id: photo.id,
-      altText: photo.altText,
-      sortOrder: photo.sortOrder,
-      url: getSignedTalentPhotoUrl(photo.filePath),
-    };
   } catch (error) {
     // Avoid an orphaned cloud asset if the database write fails.
-    if (uploadedFileId) {
-      try {
-        await imageKit.files.delete(uploadedFileId);
-      } catch (cleanupError) {
-        console.error("ImageKit upload cleanup failed:", cleanupError);
-      }
+    try {
+      await imageKit.files.delete(uploaded.fileId);
+    } catch (cleanupError) {
+      console.error("ImageKit upload cleanup failed:", cleanupError);
     }
 
     throw error;
   }
+
+  return {
+    id: photo.id,
+    altText: photo.altText,
+    sortOrder: photo.sortOrder,
+    url: getSignedTalentPhotoUrl(photo.filePath),
+  };
 }
 
 export async function deleteTalentProfilePhoto(input: {

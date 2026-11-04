@@ -386,7 +386,7 @@ async function handleResendVerification() {
                                 placeholder="name@example.com"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                helperText="Email verification is not enabled yet."
+                                helperText="We will send a verification link to this address after registration."
                             />
 
                             <div className="grid gap-6 md:grid-cols-2">
@@ -513,7 +513,7 @@ async function handleResendVerification() {
                         {/* Submission and Action */}
                         <div className="pt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
                             <div className="text-xs text-muted-foreground max-w-sm leading-relaxed">
-                               Account creation is enabled. Email verification and sign-in are not yet available.
+                               After creating your account, verify your email address before signing in.
                             </div>
                             <button
     type="submit"

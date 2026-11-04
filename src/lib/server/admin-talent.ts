@@ -31,6 +31,10 @@ export async function searchAdminTalentProfiles(
 
   const conditions: Prisma.TalentProfileWhereInput[] = [];
 
+  if (filters.status !== "ALL") {
+    conditions.push({ status: filters.status });
+  }
+
   if (filters.search) {
     conditions.push({
       OR: [
@@ -98,6 +102,9 @@ export async function searchAdminTalentProfiles(
         location: true,
         languages: true,
         experienceYears: true,
+        status: true,
+        ownerUserId: true,
+        primaryGuardianUserId: true,
         updatedAt: true,
       },
       orderBy: [{ updatedAt: "desc" }, { fullName: "asc" }],
@@ -108,7 +115,10 @@ export async function searchAdminTalentProfiles(
   ]);
 
   return {
-    profiles,
+    profiles: profiles.map(({ ownerUserId, primaryGuardianUserId, ...profile }) => ({
+      ...profile,
+      isUnclaimed: ownerUserId === null && primaryGuardianUserId === null,
+    })),
     total,
     page: filters.page,
     pageSize: PAGE_SIZE,
@@ -147,4 +157,41 @@ export async function createAdminTalentProfile(
       fullName: true,
     },
   });
+}
+
+
+/** Update a profile lifecycle state. The authorization check is server-side. */
+export async function updateAdminTalentProfileStatus(
+  input: import("../validation/admin-talent").AdminTalentProfileStatusInput,
+) {
+  await requireRole(APP_ROLES.ADMIN);
+
+  return prisma.talentProfile.update({
+    where: { id: input.profileId },
+    data: { status: input.status },
+    select: { id: true, status: true },
+  });
+}
+
+/**
+ * Permanently remove only an unclaimed profile.
+ * The atomic condition prevents deleting a profile if it has been linked
+ * to a talent account or guardian.
+ */
+export async function removeUnclaimedTalentProfile(profileId: string) {
+  await requireRole(APP_ROLES.ADMIN);
+
+  const result = await prisma.talentProfile.deleteMany({
+    where: {
+      id: profileId,
+      ownerUserId: null,
+      primaryGuardianUserId: null,
+    },
+  });
+
+  if (result.count !== 1) {
+    throw new Error("Only unclaimed profiles can be permanently removed.");
+  }
+
+  return { removed: true as const, profileId };
 }

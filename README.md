@@ -82,7 +82,7 @@ A separate Express API server is not part of the current architecture. Backend o
 - Resend responses are generic to reduce account enumeration.
 - Gmail SMTP email delivery through Nodemailer.
 - Verification tokens and account activation remain independent of the mail provider.
-- Local email delivery and database account-verification flow tested.
+- Gmail SMTP delivery is awaiting local credential verification.
 
 ### Login and sessions
 

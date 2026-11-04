@@ -132,6 +132,7 @@ export async function requireTalentProfileAccess(profileId: string) {
           url: true,
           altText: true,
           sortOrder: true,
+          filePath: true,
         },
       },
       updatedAt: true,

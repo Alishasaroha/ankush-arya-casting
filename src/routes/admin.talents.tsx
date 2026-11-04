@@ -4,6 +4,7 @@ import {
   createAdminTalentProfileFn,
   getAdminTalentDirectoryFn,
   getCurrentUserFn,
+  updateAdminTalentProfileStatusFn,
 } from "@/lib/auth.functions";
 
 export const Route = createFileRoute("/admin/talents")({
@@ -29,6 +30,7 @@ export const Route = createFileRoute("/admin/talents")({
         maxHeightCm: null,
         minExperienceYears: null,
         maxExperienceYears: null,
+        status: "ACTIVE",
         page: 1,
       },
     });
@@ -38,7 +40,10 @@ export const Route = createFileRoute("/admin/talents")({
   component: AdminTalentDirectoryPage,
 });
 
+type ProfileStatus = "ACTIVE" | "INACTIVE" | "ARCHIVED";
+
 type DirectoryFilters = {
+  status: "ALL" | ProfileStatus;
   search: string;
   gender: string;
   language: string;
@@ -51,6 +56,7 @@ type DirectoryFilters = {
 };
 
 type FilterForm = {
+  status: "ALL" | ProfileStatus;
   search: string;
   gender: string;
   language: string;
@@ -102,6 +108,7 @@ function AdminTalentDirectoryPage() {
     experienceSummary: "",
   });
   const [filters, setFilters] = useState<FilterForm>({
+    status: "ACTIVE",
     search: "",
     gender: "",
     language: "",
@@ -113,6 +120,7 @@ function AdminTalentDirectoryPage() {
     maxExperienceYears: "",
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [updatingProfileId, setUpdatingProfileId] = useState<string | null>(null);
   const [error, setError] = useState("");
 
   async function handleCreateSubmit(event: FormEvent<HTMLFormElement>) {
@@ -164,6 +172,7 @@ function AdminTalentDirectoryPage() {
 
   function getFilterValues(): DirectoryFilters {
     return {
+      status: filters.status,
       search: filters.search.trim(),
       gender: filters.gender.trim(),
       language: filters.language.trim(),
@@ -198,8 +207,26 @@ function AdminTalentDirectoryPage() {
     void loadDirectory(1, getFilterValues());
   }
 
+  async function handleStatusChange(profileId: string, status: ProfileStatus) {
+    setUpdatingProfileId(profileId);
+    setError("");
+
+    try {
+      await updateAdminTalentProfileStatusFn({
+        data: { profileId, status },
+      });
+      await loadDirectory(directory.page, getFilterValues());
+    } catch (statusError) {
+      console.error("Talent profile status update failed:", statusError);
+      setError("We couldn't update this profile status. Please try again.");
+    } finally {
+      setUpdatingProfileId(null);
+    }
+  }
+
   function clearFilters() {
     const emptyFilters: FilterForm = {
+      status: "ACTIVE",
       search: "",
       gender: "",
       language: "",
@@ -213,6 +240,7 @@ function AdminTalentDirectoryPage() {
 
     setFilters(emptyFilters);
     void loadDirectory(1, {
+      status: "ACTIVE",
       search: "",
       gender: "",
       language: "",
@@ -435,6 +463,22 @@ function AdminTalentDirectoryPage() {
 
             <label className="block text-sm">
               <span className="mb-2 block text-xs uppercase tracking-widest text-muted-foreground">
+                Profile status
+              </span>
+              <select
+                value={filters.status}
+                onChange={(event) => updateFilter("status", event.target.value as FilterForm["status"])}
+                className="w-full border hairline bg-background px-4 py-3 outline-none focus:border-gold"
+              >
+                <option value="ACTIVE">Active</option>
+                <option value="INACTIVE">Inactive</option>
+                <option value="ARCHIVED">Archived</option>
+                <option value="ALL">All statuses</option>
+              </select>
+            </label>
+
+            <label className="block text-sm">
+              <span className="mb-2 block text-xs uppercase tracking-widest text-muted-foreground">
                 Language (exact match)
               </span>
               <input
@@ -587,7 +631,17 @@ function AdminTalentDirectoryPage() {
                     className="flex flex-col gap-5 py-6 md:flex-row md:items-center md:justify-between"
                   >
                     <div className="min-w-0">
-                      <h3 className="font-display text-xl">{profile.fullName}</h3>
+                      <div className="flex flex-wrap items-center gap-3">
+                        <h3 className="font-display text-xl">{profile.fullName}</h3>
+                        <span className="border hairline px-2 py-1 text-[10px] uppercase tracking-widest">
+                          {profile.status}
+                        </span>
+                        {profile.isUnclaimed && (
+                          <span className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                            Unclaimed
+                          </span>
+                        )}
+                      </div>
                       <p className="mt-1 text-sm text-muted-foreground">
                         {[profile.location, profile.gender]
                           .filter(Boolean)
@@ -607,13 +661,28 @@ function AdminTalentDirectoryPage() {
                         </p>
                       )}
                     </div>
-                    <Link
-                      to="/dashboard/profile/$profileId"
-                      params={{ profileId: profile.id }}
-                      className="inline-flex shrink-0 items-center justify-center border hairline px-5 py-3 text-xs uppercase tracking-widest hover:border-gold"
-                    >
-                      View / Edit Profile
-                    </Link>
+                    <div className="flex flex-wrap items-center gap-3">
+                      <label className="text-xs uppercase tracking-widest text-muted-foreground">
+                        Status
+                        <select
+                          value={profile.status}
+                          disabled={updatingProfileId === profile.id}
+                          onChange={(event) => void handleStatusChange(profile.id, event.target.value as ProfileStatus)}
+                          className="mt-2 block border hairline bg-background px-3 py-2 text-xs text-foreground outline-none focus:border-gold disabled:opacity-50"
+                        >
+                          <option value="ACTIVE">Active</option>
+                          <option value="INACTIVE">Inactive</option>
+                          <option value="ARCHIVED">Archived</option>
+                        </select>
+                      </label>
+                      <Link
+                        to="/dashboard/profile/$profileId"
+                        params={{ profileId: profile.id }}
+                        className="inline-flex shrink-0 items-center justify-center border hairline px-5 py-3 text-xs uppercase tracking-widest hover:border-gold"
+                      >
+                        View / Edit Profile
+                      </Link>
+                    </div>
                   </article>
                 );
               })}

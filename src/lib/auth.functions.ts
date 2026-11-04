@@ -37,10 +37,12 @@ import {
 import {
   adminTalentDirectorySchema,
   createAdminTalentProfileSchema,
+  adminTalentProfileStatusSchema,
 } from "./validation/admin-talent";
 import {
   createAdminTalentProfile,
   searchAdminTalentProfiles,
+  updateAdminTalentProfileStatus,
 } from "./server/admin-talent";
 
 export const registerAdultActorFn = createServerFn({
@@ -247,6 +249,15 @@ export const createAdminTalentProfileFn = createServerFn({
   .validator(createAdminTalentProfileSchema)
   .handler(async ({ data }) => {
     const profile = await createAdminTalentProfile(data);
+    return { profile };
+  });
+
+export const updateAdminTalentProfileStatusFn = createServerFn({
+  method: "POST",
+})
+  .validator(adminTalentProfileStatusSchema)
+  .handler(async ({ data }) => {
+    const profile = await updateAdminTalentProfileStatus(data);
     return { profile };
   });
 

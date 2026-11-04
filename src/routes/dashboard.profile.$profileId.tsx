@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useState, type ChangeEvent, type FormEvent } from "react";
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 
 import {
@@ -25,7 +25,6 @@ export const Route = createFileRoute("/dashboard/profile/$profileId")({
 });
 
 type ProfileLinkDraft = { title: string; url: string };
-type PhotoDraft = { url: string; altText: string };
 type LinkListName = "previousWorkLinks" | "portfolioLinks";
 
 type ProfileForm = {
@@ -42,7 +41,6 @@ type ProfileForm = {
   introVideoUrl: string;
   previousWorkLinks: ProfileLinkDraft[];
   portfolioLinks: ProfileLinkDraft[];
-  photos: PhotoDraft[];
 };
 
 function toDateInput(value: Date | null): string {
@@ -71,14 +69,16 @@ function EditTalentProfilePage() {
     portfolioLinks: profile.links
       .filter((link) => link.type === "PORTFOLIO")
       .map(({ title, url }) => ({ title, url })),
-    photos: profile.photos.map(({ url, altText }) => ({
-      url,
-      altText: altText ?? "",
-    })),
   }));
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [photos, setPhotos] = useState(profile.photos);
+  const [photoAltText, setPhotoAltText] = useState("");
+  const [isUploadingPhotos, setIsUploadingPhotos] = useState(false);
+  const [deletingPhotoId, setDeletingPhotoId] = useState<string | null>(null);
+  const [photoMessage, setPhotoMessage] = useState("");
+  const [photoError, setPhotoError] = useState("");
 
   function clearStatus() {
     setMessage("");
@@ -116,30 +116,106 @@ function EditTalentProfilePage() {
     clearStatus();
   }
 
-  function updatePhoto(index: number, field: keyof PhotoDraft, value: string) {
-    setForm((current) => ({
-      ...current,
-      photos: current.photos.map((photo, photoIndex) =>
-        photoIndex === index ? { ...photo, [field]: value } : photo,
-      ),
-    }));
-    clearStatus();
+  async function handlePhotoUpload(event: ChangeEvent<HTMLInputElement>) {
+    const selectedFiles = Array.from(event.currentTarget.files ?? []);
+    event.currentTarget.value = "";
+
+    if (selectedFiles.length === 0) return;
+
+    if (photos.length + selectedFiles.length > 30) {
+      setPhotoError("A talent profile can contain up to 30 photos.");
+      setPhotoMessage("");
+      return;
+    }
+
+    setIsUploadingPhotos(true);
+    setPhotoMessage("");
+    setPhotoError("");
+
+    let uploadedCount = 0;
+
+    try {
+      // Upload one at a time so each request gets an accurate server-side sort order.
+      for (const file of selectedFiles) {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("altText", photoAltText);
+
+        const response = await fetch(
+          `/api/talent-profiles/${profile.id}/photos`,
+          {
+            method: "POST",
+            body: formData,
+            credentials: "same-origin",
+          },
+        );
+
+        const result = (await response.json().catch(() => ({}))) as {
+          photo?: (typeof profile.photos)[number];
+          message?: string;
+        };
+
+        if (!response.ok || !result.photo) {
+          throw new Error(result.message ?? "A photo could not be uploaded.");
+        }
+
+        setPhotos((current) => [...current, result.photo!]);
+        uploadedCount += 1;
+      }
+
+      setPhotoMessage(
+        `${uploadedCount} photo${uploadedCount === 1 ? "" : "s"} uploaded successfully.`,
+      );
+    } catch (uploadError) {
+      setPhotoError(
+        uploadError instanceof Error
+          ? uploadError.message
+          : "We couldn't upload the selected photos.",
+      );
+
+      if (uploadedCount > 0) {
+        setPhotoMessage(
+          `${uploadedCount} photo${uploadedCount === 1 ? "" : "s"} uploaded before the error.`,
+        );
+      }
+    } finally {
+      setIsUploadingPhotos(false);
+    }
   }
 
-  function addPhoto() {
-    setForm((current) => ({
-      ...current,
-      photos: [...current.photos, { url: "", altText: "" }],
-    }));
-    clearStatus();
-  }
+  async function handleRemovePhoto(photoId: string) {
+    setDeletingPhotoId(photoId);
+    setPhotoMessage("");
+    setPhotoError("");
 
-  function removePhoto(index: number) {
-    setForm((current) => ({
-      ...current,
-      photos: current.photos.filter((_, photoIndex) => photoIndex !== index),
-    }));
-    clearStatus();
+    try {
+      const response = await fetch(
+        `/api/talent-profiles/${profile.id}/photos/${photoId}`,
+        {
+          method: "DELETE",
+          credentials: "same-origin",
+        },
+      );
+
+      const result = (await response.json().catch(() => ({}))) as {
+        message?: string;
+      };
+
+      if (!response.ok) {
+        throw new Error(result.message ?? "We couldn't remove this photo.");
+      }
+
+      setPhotos((current) => current.filter((photo) => photo.id !== photoId));
+      setPhotoMessage("Photo removed successfully.");
+    } catch (removeError) {
+      setPhotoError(
+        removeError instanceof Error
+          ? removeError.message
+          : "We couldn't remove this photo.",
+      );
+    } finally {
+      setDeletingPhotoId(null);
+    }
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -165,7 +241,6 @@ function EditTalentProfilePage() {
           introVideoUrl: form.introVideoUrl,
           previousWorkLinks: form.previousWorkLinks.filter((item) => item.title.trim() || item.url.trim()),
           portfolioLinks: form.portfolioLinks.filter((item) => item.title.trim() || item.url.trim()),
-          photos: form.photos.filter((item) => item.url.trim() || item.altText.trim()),
         },
       });
       setMessage("Your talent profile has been updated.");
@@ -295,38 +370,83 @@ function EditTalentProfilePage() {
             </label>
             <label className="block text-sm">
               <span className="mb-2 block text-xs uppercase tracking-widest text-muted-foreground">Introduction video link</span>
-              <input type="url" value={form.introVideoUrl} onChange={(event) => updateField("introVideoUrl", event.target.value)} placeholder="https://..." className="w-full border hairline bg-background px-4 py-3 outline-none focus:border-gold" />
-              <span className="mt-2 block text-xs text-muted-foreground">Use a shareable HTTPS link, for example from YouTube or Vimeo.</span>
+              <input type="url" value={form.introVideoUrl} onChange={(event) => updateField("introVideoUrl", event.target.value)} placeholder="https://www.youtube.com/watch?v=..." className="w-full border hairline bg-background px-4 py-3 outline-none focus:border-gold" />
+              <span className="mt-2 block text-xs text-muted-foreground">Paste a shareable YouTube video URL. Video files are not uploaded or stored by the agency.</span>
             </label>
           </section>
 
           <section className="space-y-6 border-t hairline pt-8">
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <div>
-                <h2 className="font-display text-2xl">Photos</h2>
-                <p className="mt-2 text-sm text-muted-foreground">Add links to your hosted profile photos.</p>
-              </div>
-              <button type="button" onClick={addPhoto} className="border hairline px-4 py-2 text-xs uppercase tracking-widest hover:border-gold">
-                + Add photo
-              </button>
+            <div>
+              <h2 className="font-display text-2xl">Profile Photos</h2>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Upload clear, recent photos for the agency to review.
+              </p>
             </div>
-            <p className="text-xs text-muted-foreground">For now, add HTTPS image URLs. Direct photo uploads and secure cloud storage will be added separately.</p>
-            {form.photos.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No photos added yet.</p>
+
+            <label className="block text-sm">
+              <span className="mb-2 block text-xs uppercase tracking-widest text-muted-foreground">
+                Photo description (optional)
+              </span>
+              <input
+                maxLength={200}
+                value={photoAltText}
+                onChange={(event) => setPhotoAltText(event.target.value)}
+                placeholder="Headshot, full-length, portfolio..."
+                className="w-full border hairline bg-background px-4 py-3 outline-none focus:border-gold"
+              />
+              <span className="mt-2 block text-xs text-muted-foreground">
+                This description is applied to every photo selected in the next upload.
+              </span>
+            </label>
+
+            <label className="flex cursor-pointer flex-col items-center justify-center gap-2 border border-dashed hairline bg-background px-6 py-8 text-center transition-colors hover:border-gold">
+              <span className="text-sm font-medium">
+                {isUploadingPhotos ? "Uploading photos..." : "Choose photos to upload"}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                JPG, PNG or WebP · Maximum 5 MB each · Up to 30 photos per profile
+              </span>
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                multiple
+                disabled={isUploadingPhotos}
+                onChange={handlePhotoUpload}
+                className="mt-2 block w-full max-w-xs text-xs text-muted-foreground file:mr-3 file:border file:border-current file:bg-transparent file:px-3 file:py-2 file:text-xs file:uppercase file:tracking-widest"
+              />
+            </label>
+
+            {photoMessage && <p role="status" className="text-sm text-green-700">{photoMessage}</p>}
+            {photoError && <p role="alert" className="text-sm text-destructive">{photoError}</p>}
+
+            {photos.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No photos uploaded yet.</p>
             ) : (
-              form.photos.map((photo, index) => (
-                <div key={index} className="grid gap-4 border hairline p-4">
-                  <label className="block text-sm">
-                    <span className="mb-2 block text-xs uppercase tracking-widest text-muted-foreground">Photo URL</span>
-                    <input required type="url" value={photo.url} onChange={(event) => updatePhoto(index, "url", event.target.value)} placeholder="https://..." className="w-full border hairline bg-background px-4 py-3 outline-none focus:border-gold" />
-                  </label>
-                  <label className="block text-sm">
-                    <span className="mb-2 block text-xs uppercase tracking-widest text-muted-foreground">Description (optional)</span>
-                    <input maxLength={200} value={photo.altText} onChange={(event) => updatePhoto(index, "altText", event.target.value)} placeholder="Headshot, full-length, portfolio..." className="w-full border hairline bg-background px-4 py-3 outline-none focus:border-gold" />
-                  </label>
-                  <button type="button" onClick={() => removePhoto(index)} className="text-left text-xs uppercase tracking-widest text-muted-foreground hover:text-destructive">Remove photo</button>
-                </div>
-              ))
+              <div className="grid gap-4 sm:grid-cols-2">
+                {photos.map((photo) => (
+                  <div key={photo.id} className="overflow-hidden border hairline">
+                    <img
+                      src={photo.url}
+                      alt={photo.altText ?? "Talent profile photo"}
+                      className="aspect-[4/5] w-full bg-background object-cover"
+                      loading="lazy"
+                    />
+                    <div className="flex items-center justify-between gap-3 p-3">
+                      <p className="min-w-0 truncate text-xs text-muted-foreground">
+                        {photo.altText || "Profile photo"}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => handleRemovePhoto(photo.id)}
+                        disabled={isUploadingPhotos || deletingPhotoId !== null}
+                        className="shrink-0 text-xs uppercase tracking-widest text-muted-foreground hover:text-destructive disabled:opacity-50"
+                      >
+                        {deletingPhotoId === photo.id ? "Removing..." : "Remove"}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
             )}
           </section>
 

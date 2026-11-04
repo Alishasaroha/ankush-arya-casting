@@ -71,7 +71,7 @@ export const Route = createFileRoute("/api/talent-profiles/$profileId/photos")({
 
           if (
             contentLengthHeader &&
-            (!/^\\d+$/.test(contentLengthHeader) ||
+            (!/^[0-9]+$/.test(contentLengthHeader) ||
               Number(contentLengthHeader) > MAX_REQUEST_BYTES)
           ) {
             throw new TalentPhotoRequestError("Each photo must be 5 MB or smaller.", 413);

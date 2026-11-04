@@ -49,16 +49,16 @@ const youtubeVideoUrlSchema = z
         return false;
       }
 
-      const host = url.hostname.toLowerCase().replace(/^www\\./, "");
+      const host = url.hostname.toLowerCase().replace(/^www\./, "");
 
       if (host === "youtu.be") {
-        return /^\\/[A-Za-z0-9_-]+\\/?$/.test(url.pathname);
+        return /^\/[A-Za-z0-9_-]+\/?$/.test(url.pathname);
       }
 
       if (host === "youtube.com" || host === "m.youtube.com") {
         return (
           (url.pathname === "/watch" && Boolean(url.searchParams.get("v"))) ||
-          /^\\/(shorts|embed)\\/[A-Za-z0-9_-]+\\/?$/.test(url.pathname)
+          /^\/(shorts|embed)\/[A-Za-z0-9_-]+\/?$/.test(url.pathname)
         );
       }
 

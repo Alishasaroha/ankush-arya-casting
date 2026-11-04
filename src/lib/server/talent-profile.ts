@@ -1,6 +1,7 @@
 import { prisma } from "./prisma";
 import { requireTalentProfileAccess } from "./auth/authorization";
 import type { UpdateTalentProfileInput } from "../validation/talent-profile";
+import { getSignedTalentPhotoUrl } from "./imagekit";
 
 const profileDetailsSelect = {
   id: true,
@@ -33,6 +34,7 @@ const profileDetailsSelect = {
       url: true,
       altText: true,
       sortOrder: true,
+      filePath: true,
     },
   },
   updatedAt: true,
@@ -47,7 +49,13 @@ export async function getTalentProfile(profileId: string) {
     ...safeProfile
   } = profile;
 
-  return safeProfile;
+  return {
+    ...safeProfile,
+    photos: safeProfile.photos.map(({ filePath, ...photo }) => ({
+      ...photo,
+      url: filePath ? getSignedTalentPhotoUrl(filePath) : photo.url,
+    })),
+  };
 }
 
 /**
@@ -72,7 +80,6 @@ export async function updateTalentProfile(input: UpdateTalentProfileInput) {
     introVideoUrl,
     previousWorkLinks,
     portfolioLinks,
-    photos,
   } = input;
 
   const links = [
@@ -88,7 +95,7 @@ export async function updateTalentProfile(input: UpdateTalentProfileInput) {
     })),
   ];
 
-  return prisma.talentProfile.update({
+  const updatedProfile = await prisma.talentProfile.update({
     where: { id: profileId },
     data: {
       fullName,
@@ -115,15 +122,15 @@ export async function updateTalentProfile(input: UpdateTalentProfileInput) {
           sortOrder: link.sortOrder,
         })),
       },
-      photos: {
-        deleteMany: {},
-        create: photos.map((photo, sortOrder) => ({
-          url: photo.url,
-          altText: photo.altText || null,
-          sortOrder,
-        })),
-      },
     },
     select: profileDetailsSelect,
   });
+
+  return {
+    ...updatedProfile,
+    photos: updatedProfile.photos.map(({ filePath, ...photo }) => ({
+      ...photo,
+      url: filePath ? getSignedTalentPhotoUrl(filePath) : photo.url,
+    })),
+  };
 }

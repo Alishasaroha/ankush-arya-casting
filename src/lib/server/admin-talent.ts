@@ -172,26 +172,3 @@ export async function updateAdminTalentProfileStatus(
     select: { id: true, status: true },
   });
 }
-
-/**
- * Permanently remove only an unclaimed profile.
- * The atomic condition prevents deleting a profile if it has been linked
- * to a talent account or guardian.
- */
-export async function removeUnclaimedTalentProfile(profileId: string) {
-  await requireRole(APP_ROLES.ADMIN);
-
-  const result = await prisma.talentProfile.deleteMany({
-    where: {
-      id: profileId,
-      ownerUserId: null,
-      primaryGuardianUserId: null,
-    },
-  });
-
-  if (result.count !== 1) {
-    throw new Error("Only unclaimed profiles can be permanently removed.");
-  }
-
-  return { removed: true as const, profileId };
-}

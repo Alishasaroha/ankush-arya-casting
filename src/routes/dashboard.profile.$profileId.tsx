@@ -454,7 +454,7 @@ function EditTalentProfilePage() {
           {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
 
           <div className="flex flex-wrap items-center gap-4 border-t hairline pt-6">
-            <button type="submit" disabled={isSaving} className="bg-foreground px-6 py-3 text-xs uppercase tracking-widest text-background transition-opacity hover:opacity-80 disabled:opacity-50">
+            <button type="submit" disabled={isSaving || isUploadingPhotos || deletingPhotoId !== null} className="bg-foreground px-6 py-3 text-xs uppercase tracking-widest text-background transition-opacity hover:opacity-80 disabled:opacity-50">
               {isSaving ? "Saving..." : "Save changes"}
             </button>
             <Link to="/dashboard" className="text-xs uppercase tracking-widest text-muted-foreground hover:text-foreground">

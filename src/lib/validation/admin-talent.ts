@@ -14,6 +14,7 @@ export const adminTalentDirectorySchema = z
     maxHeightCm: optionalRangeValue(30, 250).optional().default(null),
     minExperienceYears: optionalRangeValue(0, 80).optional().default(null),
     maxExperienceYears: optionalRangeValue(0, 80).optional().default(null),
+    status: z.enum(["ALL", "ACTIVE", "INACTIVE", "ARCHIVED"]).default("ACTIVE"),
     page: z.number().int().min(1).max(100_000).default(1),
   })
   .superRefine((filters, context) => {
@@ -76,4 +77,21 @@ export const createAdminTalentProfileSchema = z.object({
 
 export type CreateAdminTalentProfileInput = z.infer<
   typeof createAdminTalentProfileSchema
+>;
+
+
+export const adminTalentProfileStatusSchema = z.object({
+  profileId: z.string().uuid(),
+  status: z.enum(["ACTIVE", "INACTIVE", "ARCHIVED"]),
+});
+
+export const deleteUnclaimedTalentProfileSchema = z.object({
+  profileId: z.string().uuid(),
+});
+
+export type AdminTalentProfileStatusInput = z.infer<
+  typeof adminTalentProfileStatusSchema
+>;
+export type DeleteUnclaimedTalentProfileInput = z.infer<
+  typeof deleteUnclaimedTalentProfileSchema
 >;

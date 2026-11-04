@@ -7,6 +7,12 @@ datasource db {
   provider = "postgresql"
 }
 
+enum TalentProfileStatus {
+  ACTIVE
+  INACTIVE
+  ARCHIVED
+}
+
 enum TalentLinkType {
   PREVIOUS_WORK
   PORTFOLIO
@@ -53,6 +59,7 @@ model TalentProfile {
   gender      String?
   location    String?
   bio         String?
+  status      TalentProfileStatus @default(ACTIVE)
 
   languages         String[] @default([])
   experienceYears   Int?

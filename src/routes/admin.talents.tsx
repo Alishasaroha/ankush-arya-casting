@@ -215,7 +215,7 @@ function AdminTalentDirectoryPage() {
       await updateAdminTalentProfileStatusFn({
         data: { profileId, status },
       });
-      await loadDirectory(directory.page, getFilterValues());
+      await loadDirectory(1, getFilterValues());
     } catch (statusError) {
       console.error("Talent profile status update failed:", statusError);
       setError("We couldn't update this profile status. Please try again.");

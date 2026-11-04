@@ -72,7 +72,11 @@ COMMIT;
 SELECT
   u."email",
   r."name" AS assigned_role,
-  (u."ownedProfile" IS NOT NULL) AS has_owned_talent_profile
+  EXISTS (
+    SELECT 1
+    FROM "TalentProfile" AS p
+    WHERE p."ownerUserId" = u."id"
+  ) AS has_owned_talent_profile
 FROM "User" AS u
 JOIN "UserRole" AS ur ON ur."userId" = u."id"
 JOIN "Role" AS r ON r."id" = ur."roleId"

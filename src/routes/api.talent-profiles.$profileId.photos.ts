@@ -10,6 +10,51 @@ import {
 
 const MAX_REQUEST_BYTES = 5 * 1024 * 1024 + 256 * 1024;
 
+async function readRequestBodyWithLimit(
+  request: Request,
+  maxBytes: number,
+): Promise<Uint8Array> {
+  if (!request.body) {
+    throw new TalentPhotoRequestError("Select an image to upload.");
+  }
+
+  const reader = request.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let totalBytes = 0;
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+
+      if (done) break;
+
+      totalBytes += value.byteLength;
+
+      if (totalBytes > maxBytes) {
+        await reader.cancel();
+        throw new TalentPhotoRequestError(
+          "Each photo must be 5 MB or smaller.",
+          413,
+        );
+      }
+
+      chunks.push(value);
+    }
+  } finally {
+    reader.releaseLock();
+  }
+
+  const body = new Uint8Array(totalBytes);
+  let offset = 0;
+
+  for (const chunk of chunks) {
+    body.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+
+  return body;
+}
+
 export const Route = createFileRoute("/api/talent-profiles/$profileId/photos")({
   server: {
     handlers: {
@@ -22,17 +67,34 @@ export const Route = createFileRoute("/api/talent-profiles/$profileId/photos")({
           // Reject unauthorized requests before parsing the multipart file body.
           await requireTalentProfileAccess(params.profileId);
 
-          const contentLength = Number(request.headers.get("content-length") ?? 0);
+          const contentLengthHeader = request.headers.get("content-length");
 
-          if (contentLength > MAX_REQUEST_BYTES) {
+          if (
+            contentLengthHeader &&
+            (!/^\\d+$/.test(contentLengthHeader) ||
+              Number(contentLengthHeader) > MAX_REQUEST_BYTES)
+          ) {
             throw new TalentPhotoRequestError("Each photo must be 5 MB or smaller.", 413);
           }
 
           let formData: FormData;
 
           try {
-            formData = await request.formData();
-          } catch {
+            const body = await readRequestBodyWithLimit(request, MAX_REQUEST_BYTES);
+            const boundedRequest = new Request(request.url, {
+              method: "POST",
+              headers: {
+                "content-type": request.headers.get("content-type") ?? "",
+              },
+              body,
+            });
+
+            formData = await boundedRequest.formData();
+          } catch (parseError) {
+            if (parseError instanceof TalentPhotoRequestError) {
+              throw parseError;
+            }
+
             throw new TalentPhotoRequestError("Send the photo as multipart form data.");
           }
 

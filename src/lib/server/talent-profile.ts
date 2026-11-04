@@ -10,6 +10,7 @@ const profileDetailsSelect = {
   gender: true,
   location: true,
   bio: true,
+  status: true,
   languages: true,
   experienceYears: true,
   experienceSummary: true,

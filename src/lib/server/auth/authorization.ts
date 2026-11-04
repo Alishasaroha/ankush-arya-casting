@@ -109,6 +109,7 @@ export async function requireTalentProfileAccess(profileId: string) {
       gender: true,
       location: true,
       bio: true,
+      status: true,
       languages: true,
       experienceYears: true,
       experienceSummary: true,

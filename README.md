@@ -56,7 +56,7 @@ The project combines the agency's public website with a private talent-managemen
 | Zod | Server request validation |
 | Argon2id (`argon2`) | Password hashing and verification |
 | Node.js Crypto | Secure random tokens and SHA-256 token hashing |
-| Resend | Transactional email delivery |
+| Nodemailer | Gmail SMTP email delivery for initial development |
 | HTTP-only cookies | Browser session credential |
 
 A separate Express API server is not part of the current architecture. Backend operations use TanStack Start server functions and server-only modules.
@@ -80,7 +80,8 @@ A separate Express API server is not part of the current architecture. Backend o
 - Verification tokens expire after 30 minutes and are consumed during verification.
 - Resend verification flow with a 60-second per-account cooldown.
 - Resend responses are generic to reduce account enumeration.
-- Resend email delivery integration.
+- Gmail SMTP email delivery through Nodemailer.
+- Verification tokens and account activation remain independent of the mail provider.
 - Local email delivery and database account-verification flow tested.
 
 ### Login and sessions
@@ -271,7 +272,7 @@ npm run dev
 
 Vite prints the local development URL in the terminal. Set `APP_URL` to that same origin and port.
 
-A fresh checkout requires its own PostgreSQL instance, environment variables, and Resend configuration. Local database contents and credentials are not part of this repository.
+A fresh checkout requires its own PostgreSQL instance and environment variables. Gmail SMTP requires a Google App Password; local database contents and credentials are not part of this repository.
 
 ## Environment variables
 
@@ -279,19 +280,25 @@ Create `.env` in the project root:
 
 ```env
 DATABASE_URL="postgresql://USER:PASSWORD@localhost:5432/ankush_arya_casting?schema=public"
-RESEND_API_KEY="your-resend-api-key"
-EMAIL_FROM="Ankush Arya Casting <onboarding@resend.dev>"
+SMTP_HOST="smtp.gmail.com"
+SMTP_PORT="465"
+SMTP_USER="ankusharyacasting@gmail.com"
+SMTP_PASS="your-google-app-password-without-spaces"
+EMAIL_FROM="Ankush Arya Casting <ankusharyacasting@gmail.com>"
 APP_URL="http://localhost:8080"
 ```
 
 - `DATABASE_URL` — Local or deployed PostgreSQL connection string.
-- `RESEND_API_KEY` — Private Resend API key.
-- `EMAIL_FROM` — Sender address configured with Resend.
+- `SMTP_HOST` — SMTP server hostname; use `smtp.gmail.com` for Gmail.
+- `SMTP_PORT` — Use `465` for implicit SSL/TLS or `587` for STARTTLS.
+- `SMTP_USER` — Agency Gmail address used to authenticate.
+- `SMTP_PASS` — Google App Password. Remove the display spaces and keep it private.
+- `EMAIL_FROM` — Sender name and address; for this setup use the same Gmail account as `SMTP_USER`.
 - `APP_URL` — Application origin used to construct email verification links.
 
-The Resend shared onboarding sender is restricted to limited testing until an agency-owned sending domain is verified. Configure an agency domain before sending production emails to actors.
+Gmail SMTP is being used for initial development and low-volume verification messages. Keep the Google App Password private and never commit it. For higher-volume production delivery, move to a transactional email provider with an authenticated agency-owned domain.
 
-Never commit `.env`, API keys, database passwords, session cookies, or verification tokens.
+Never commit `.env`, Google App Passwords, SMTP credentials, API keys, database passwords, session cookies, or verification tokens.
 
 ## Scripts
 
@@ -339,7 +346,7 @@ The first version focuses on a private talent database and basic agency administ
 |---|---|---|
 | 1 | Website foundation and initial UI | Implemented; content refinement ongoing |
 | 2 | PostgreSQL and Prisma foundation | Implemented |
-| 3 | Registration and email verification | Implemented and tested locally |
+| 3 | Registration and email verification | Implemented; Gmail SMTP delivery configured on feature branch and awaiting local verification |
 | 4 | Login, sessions, and logout | Implemented and tested locally |
 | 5 | Role and profile-ownership authorization foundation | Implemented on feature branch; local validation pending |
 | 6 | Initial admin provisioning | Bootstrap SQL script implemented; local execution pending |

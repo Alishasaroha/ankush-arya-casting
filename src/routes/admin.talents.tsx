@@ -166,7 +166,7 @@ function AdminTalentDirectoryPage() {
     setCreateError("");
   }
 
-  function updateFilter(field: keyof FilterForm, value: string) {
+  function updateFilter<K extends keyof FilterForm>(field: K, value: FilterForm[K]) {
     setFilters((current) => ({ ...current, [field]: value }));
   }
 

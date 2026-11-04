@@ -127,6 +127,7 @@ ankush-arya-casting/
 ├── prisma/
 │   ├── migrations/
 │   ├── bootstrap-admin.sql
+│   ├── bootstrap-agency-admin.sql
 │   └── schema.prisma
 ├── public/
 ├── src/
@@ -223,7 +224,9 @@ The first agency administrator must be provisioned deliberately by someone with 
 4. Enter the exact email address of the verified agency account when prompted.
 5. Confirm the output shows that email with `assigned_role = ADMIN`.
 
-The script runs in a transaction, refuses missing or unverified accounts, creates the `ADMIN` role if needed, and assigns it only to the supplied account. Run it only with agency-owner approval and trusted database credentials. Keep the database password private.
+The script runs in a transaction, refuses missing or unverified accounts, creates the `ADMIN` role if needed, and assigns it only to the supplied account. It does not remove any other role or profile.
+
+For a dedicated agency account created temporarily through the adult actor signup flow, use `prisma/bootstrap-agency-admin.sql` instead. After an explicit confirmation, it assigns `ADMIN`, removes the placeholder profile owned by that account, and removes only its `TALENT` role assignment. Use this second script only for the new agency administrator account; it permanently deletes that account's owned talent profile. Both scripts require a verified email and trusted database-owner access.
 
 ## Local development
 

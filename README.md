@@ -107,7 +107,7 @@ A separate Express API server is not part of the current architecture. Backend o
 - Account-linked profiles are archived rather than permanently deleted. The full profile editor remains available from each directory row.
 - Database ownership constraints permit an unclaimed record, a talent-owned record, or a guardian-managed record, while preventing a profile from being linked to both an owner and a guardian.
 - Protected profile-detail and profile-update server functions check access to the requested profile before returning or changing data.
-- The profile editor supports personal information, languages, experience, previous-work and portfolio links, Instagram, introduction-video links, and photo asset URLs; ownership and guardian relationship fields cannot be changed through this form.
+- The profile editor supports personal information, languages, experience, previous-work and portfolio links, Instagram, YouTube introduction-video URLs, and profile-photo uploads to private ImageKit storage. The application stores ImageKit file IDs and paths in PostgreSQL and serves photos through short-lived signed URLs. Ownership and guardian relationship fields cannot be changed through this form.
 
 **Authorization limitations:** Manager access is deliberately not granted until the actor-approved, revocable manager-access relationship is implemented. No public registration flow can assign the ADMIN role. The first agency administrator is provisioned manually by a database owner using `prisma/bootstrap-admin.sql`. Route guards improve navigation but are not a substitute for authorization inside every private server operation.
 
@@ -141,6 +141,8 @@ ankush-arya-casting/
 │   │   ├── auth.functions.ts
 │   │   ├── server/
 │   │   │   ├── admin-talent.ts
+│   │   │   ├── imagekit.ts
+│   │   │   ├── talent-photos.ts
 │   │   │   ├── auth/
 │   │   │   │   ├── authorization.ts
 │   │   │   │   ├── login.ts
@@ -167,6 +169,8 @@ ankush-arya-casting/
 │   │   ├── verify-email.tsx
 │   │   ├── dashboard.tsx
 │   │   ├── dashboard.profile.$profileId.tsx
+│   │   ├── api.talent-profiles.$profileId.photos.ts
+│   │   ├── api.talent-profiles.$profileId.photos.$photoId.ts
 │   │   └── admin.talents.tsx
 │   ├── generated/
 │   │   └── prisma/
@@ -185,6 +189,8 @@ Important files:
 - `src/lib/auth.functions.ts` — TanStack Start server functions.
 - `src/lib/server/auth/` — Server-only authentication, session, and authorization logic.
 - `src/lib/server/admin-talent.ts` — Admin-only talent search, filters, pagination, profile creation, and lifecycle status updates.
+- `src/lib/server/imagekit.ts` — Server-only ImageKit client and signed private-photo URLs.
+- `src/lib/server/talent-photos.ts` — Authorized private photo upload/deletion, file validation, and storage cleanup.
 - `src/lib/server/email/` — Transactional email delivery.
 - `src/lib/server/prisma.ts` — Prisma database client.
 - `src/lib/validation/auth.ts` — Authentication Zod validation schemas.
@@ -205,7 +211,7 @@ Important files:
 | `/verify-email` | Email verification |
 | `/login` | Login |
 | `/dashboard` | Authenticated account dashboard |
-| `/dashboard/profile/$profileId` | Protected talent profile editor |
+| `/dashboard/profile/$profileId` | Protected talent profile editor with profile-photo upload and YouTube intro URL |
 | `/admin/talents` | Admin-only talent directory with search, filters, pagination, lifecycle status controls, and manual profile creation |
 | `/work` | Agency work |
 | `/producers` | Information for production professionals |
@@ -289,6 +295,9 @@ SMTP_USER="ankusharyacasting@gmail.com"
 SMTP_PASS="your-google-app-password-without-spaces"
 EMAIL_FROM="Ankush Arya Casting <ankusharyacasting@gmail.com>"
 APP_URL="http://localhost:8080"
+IMAGEKIT_PUBLIC_KEY="your-imagekit-public-key"
+IMAGEKIT_PRIVATE_KEY="your-imagekit-private-key"
+IMAGEKIT_URL_ENDPOINT="https://ik.imagekit.io/your_imagekit_id"
 ```
 
 - `DATABASE_URL` — Local or deployed PostgreSQL connection string.
@@ -298,6 +307,11 @@ APP_URL="http://localhost:8080"
 - `SMTP_PASS` — Google App Password. Remove the display spaces and keep it private.
 - `EMAIL_FROM` — Sender name and address; for this setup use the same Gmail account as `SMTP_USER`.
 - `APP_URL` — Application origin used to construct email verification links.
+- `IMAGEKIT_PUBLIC_KEY` — ImageKit public identifier; it is documented for future client-side integrations and is not used by the current server-mediated upload flow.
+- `IMAGEKIT_PRIVATE_KEY` — ImageKit server secret used by the Node.js SDK. Never expose it to browser code or commit it.
+- `IMAGEKIT_URL_ENDPOINT` — HTTPS ImageKit delivery endpoint used to generate signed private-photo URLs.
+
+Profile photos are uploaded through same-origin, authenticated server routes. The server checks profile access, accepts JPG/PNG/WebP images up to 5 MB each, marks ImageKit assets private, and limits each profile to 30 photos. PostgreSQL stores the ImageKit file ID and file path; photo responses contain signed URLs that expire after one hour. The introduction-video field accepts YouTube video URLs only; video files are not uploaded or stored.
 
 Gmail SMTP is being used for initial development and low-volume verification messages. Keep the Google App Password private and never commit it. For higher-volume production delivery, move to a transactional email provider with an authenticated agency-owned domain.
 
@@ -357,7 +371,8 @@ The first version focuses on a private talent database and basic agency administ
 | 8 | Actor-approved manager access and revocation | Planned |
 | 9 | Talent profile management | Expanded editor implemented; migration, TypeScript check, and production build passed locally; interactive save verification pending |
 | 10 | Admin talent management | Directory, server-side search/filters, pagination, manual creation, profile status management, and reversible archiving implemented; local migration/build verification pending |
-| 11 | Media storage, security hardening, testing, and deployment | Planned |
+| 11 | Private profile-photo storage with ImageKit and YouTube intro links | Implemented on feature branch; local migration, SDK install, and upload testing pending |
+| 12 | Further security hardening, automated tests, and deployment | Planned |
 
 ## Git workflow
 

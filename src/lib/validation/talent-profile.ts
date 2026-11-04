@@ -33,10 +33,40 @@ const profileLinkSchema = z.object({
   url: secureUrlSchema,
 });
 
-const photoSchema = z.object({
-  url: secureUrlSchema,
-  altText: z.string().trim().max(200).optional().default(""),
-});
+const youtubeVideoUrlSchema = z
+  .string()
+  .trim()
+  .max(2048)
+  .refine((value) => {
+    if (value === "") {
+      return true;
+    }
+
+    try {
+      const url = new URL(value);
+
+      if (url.protocol !== "https:") {
+        return false;
+      }
+
+      const host = url.hostname.toLowerCase().replace(/^www\\./, "");
+
+      if (host === "youtu.be") {
+        return /^\\/[A-Za-z0-9_-]+\\/?$/.test(url.pathname);
+      }
+
+      if (host === "youtube.com" || host === "m.youtube.com") {
+        return (
+          (url.pathname === "/watch" && Boolean(url.searchParams.get("v"))) ||
+          /^\\/(shorts|embed)\\/[A-Za-z0-9_-]+\\/?$/.test(url.pathname)
+        );
+      }
+
+      return false;
+    } catch {
+      return false;
+    }
+  }, "Enter a valid YouTube video link");
 
 export const talentProfileIdSchema = z.object({
   profileId: z.string().uuid("Invalid talent profile"),
@@ -79,10 +109,9 @@ export const updateTalentProfileSchema = z.object({
       (value) => value === "" || /^@?[A-Za-z0-9._]{1,30}$/.test(value),
       "Enter an Instagram handle without a URL",
     ),
-  introVideoUrl: z.union([z.literal(""), secureUrlSchema]),
+  introVideoUrl: youtubeVideoUrlSchema,
   previousWorkLinks: z.array(profileLinkSchema).max(30),
   portfolioLinks: z.array(profileLinkSchema).max(30),
-  photos: z.array(photoSchema).max(30),
 });
 
 export type UpdateTalentProfileInput = z.infer<

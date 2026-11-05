@@ -18,10 +18,12 @@ import {
 } from "./server/auth/session-cookie";
 import {
   registerAdultActor,
+  registerGuardianWithChild,
   RegistrationValidationError,
   EmailAlreadyRegisteredError,
 } from "./server/auth/register";
 import { verifyEmailToken } from "./server/auth/verify-email";
+import { createGuardianChildProfile } from "./server/guardian-profile";
 import { sendVerificationEmail } from "./server/email/send-verification-email";
 import { getTalentProfile, updateTalentProfile } from "./server/talent-profile";
 import {
@@ -30,6 +32,7 @@ import {
   resendVerificationSchema,
   verifyEmailSchema,
 } from "./validation/auth";
+import { registerGuardianSchema, guardianChildProfileSchema } from "./validation/guardian";
 import {
   talentProfileIdSchema,
   updateTalentProfileSchema,
@@ -102,6 +105,75 @@ export const registerAdultActorFn = createServerFn({
         message: "We couldn't complete registration. Please try again.",
       };
     }
+  });
+
+
+export const registerChildArtistFn = createServerFn({
+  method: "POST",
+})
+  .validator(registerGuardianSchema)
+  .handler(async ({ data }) => {
+    try {
+      const registeredGuardian = await registerGuardianWithChild(data);
+
+      try {
+        await sendVerificationEmail({
+          to: registeredGuardian.user.email,
+          fullName: registeredGuardian.user.fullName ?? data.guardianName,
+          token: registeredGuardian.verificationToken,
+        });
+
+        return {
+          success: true as const,
+          message:
+            "Guardian account and child profile created. Please verify the guardian email address before signing in.",
+        };
+      } catch (emailError) {
+        console.error(
+          "Guardian verification email delivery failed:",
+          emailError instanceof Error ? emailError.message : "Unknown error",
+        );
+
+        return {
+          success: true as const,
+          message:
+            "Your guardian account and child profile were created, but we couldn't send the verification email. Please request a new verification email.",
+        };
+      }
+    } catch (error) {
+      if (error instanceof RegistrationValidationError) {
+        return {
+          success: false as const,
+          code: "VALIDATION_ERROR" as const,
+          fieldErrors: error.fieldErrors,
+        };
+      }
+
+      if (error instanceof EmailAlreadyRegisteredError) {
+        return {
+          success: false as const,
+          code: "EMAIL_ALREADY_REGISTERED" as const,
+          message: "An account with this email already exists.",
+        };
+      }
+
+      console.error("Guardian registration failed:", error);
+
+      return {
+        success: false as const,
+        code: "REGISTRATION_FAILED" as const,
+        message: "We couldn't complete guardian registration. Please try again.",
+      };
+    }
+  });
+
+export const createGuardianChildProfileFn = createServerFn({
+  method: "POST",
+})
+  .validator(guardianChildProfileSchema)
+  .handler(async ({ data }) => {
+    const profile = await createGuardianChildProfile(data);
+    return { profile };
   });
 
 export const verifyEmailFn = createServerFn({

@@ -1,5 +1,5 @@
 import { prisma } from "./prisma";
-import { requireTalentProfileAccess } from "./auth/authorization";
+import { requireTalentProfileAccess, requireTalentProfileReadAccess } from "./auth/authorization";
 import type { UpdateTalentProfileInput } from "../validation/talent-profile";
 import { getSignedTalentPhotoUrl } from "./imagekit";
 
@@ -42,16 +42,21 @@ const profileDetailsSelect = {
 } as const;
 
 export async function getTalentProfile(profileId: string) {
-  const profile = await requireTalentProfileAccess(profileId);
+  const { profile, access } = await requireTalentProfileReadAccess(profileId);
 
   const {
     ownerUserId: _ownerUserId,
     primaryGuardianUserId: _primaryGuardianUserId,
+    managerAccessGrants,
     ...safeProfile
   } = profile;
 
   return {
     ...safeProfile,
+    access,
+    managerAccessGrants: access.canManageManagerAccess
+      ? managerAccessGrants
+      : [],
     photos: safeProfile.photos.map(({ filePath, ...photo }) => ({
       ...photo,
       url: filePath ? getSignedTalentPhotoUrl(filePath) : photo.url,

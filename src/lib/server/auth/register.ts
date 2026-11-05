@@ -1,5 +1,6 @@
 import { generateEmailVerificationToken } from "./verification-token";
 import { registerSchema } from "../../validation/auth";
+import { registerGuardianSchema } from "../../validation/guardian";
 import { prisma } from "../prisma";
 import { hashPassword } from "./password";
 
@@ -75,6 +76,7 @@ const expiresAt = new Date(
           data: {
             email,
             passwordHash,
+            fullName,
           },
           select: {
             id: true,
@@ -127,6 +129,78 @@ const expiresAt = new Date(
       throw new EmailAlreadyRegisteredError();
     }
 
+    throw error;
+  }
+}
+
+/**
+ * Create a guardian account and its first child talent profile atomically.
+ * The guardian's email must still be verified before the account can sign in.
+ */
+export async function registerGuardianWithChild(input: unknown) {
+  const result = registerGuardianSchema.safeParse(input);
+
+  if (!result.success) {
+    const fieldErrors = Object.fromEntries(
+      Object.entries(result.error.flatten().fieldErrors).filter(([, messages]) => messages),
+    ) as Record<string, string[]>;
+
+    throw new RegistrationValidationError(fieldErrors);
+  }
+
+  const {
+    guardianName,
+    email,
+    password,
+    childName,
+    dateOfBirth,
+    guardianRelationship,
+  } = result.data;
+
+  const passwordHash = await hashPassword(password);
+  const { token, tokenHash } = generateEmailVerificationToken();
+  const expiresAt = new Date(Date.now() + 30 * 60 * 1000);
+
+  try {
+    const registeredGuardian = await prisma.$transaction(async (tx) => {
+      const guardianRole = await tx.role.upsert({
+        where: { name: "GUARDIAN" },
+        update: {},
+        create: { name: "GUARDIAN" },
+      });
+
+      const user = await tx.user.create({
+        data: { email, passwordHash, fullName: guardianName },
+        select: { id: true, email: true, fullName: true, createdAt: true },
+      });
+
+      await tx.userRole.create({
+        data: { userId: user.id, roleId: guardianRole.id },
+      });
+
+      const profile = await tx.talentProfile.create({
+        data: {
+          fullName: childName,
+          dateOfBirth: new Date(`${dateOfBirth}T00:00:00.000Z`),
+          primaryGuardianUserId: user.id,
+          guardianRelationship,
+          guardianConsentAt: new Date(),
+        },
+        select: { id: true, fullName: true },
+      });
+
+      await tx.emailVerificationToken.create({
+        data: { tokenHash, userId: user.id, expiresAt },
+      });
+
+      return { user, profile };
+    });
+
+    return { ...registeredGuardian, verificationToken: token };
+  } catch (error) {
+    if (isUniqueConstraintError(error)) {
+      throw new EmailAlreadyRegisteredError();
+    }
     throw error;
   }
 }

@@ -14,6 +14,7 @@ export async function createResendVerificationRequest(email: string) {
       select: {
         id: true,
         email: true,
+        fullName: true,
         emailVerifiedAt: true,
         ownedProfile: {
           select: { fullName: true },
@@ -66,7 +67,7 @@ export async function createResendVerificationRequest(email: string) {
     // 6. Return details for the server-side email service.
     return {
       email: user.email,
-      fullName: user.ownedProfile?.fullName ?? "there",
+      fullName: user.fullName ?? user.ownedProfile?.fullName ?? "there",
       token,
     };
   });

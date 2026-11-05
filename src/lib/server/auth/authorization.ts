@@ -105,6 +105,7 @@ export async function requireTalentProfileAccess(profileId: string) {
       ownerUserId: true,
       primaryGuardianUserId: true,
       dateOfBirth: true,
+      guardianRelationship: true,
       heightCm: true,
       gender: true,
       location: true,

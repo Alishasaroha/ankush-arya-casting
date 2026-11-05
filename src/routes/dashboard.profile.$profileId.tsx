@@ -300,6 +300,11 @@ function EditTalentProfilePage() {
           <p className="text-xs uppercase tracking-[0.3em] text-gold">Ankush Arya Casting</p>
           <h1 className="mt-3 font-display text-3xl md:text-5xl">Edit Talent Profile</h1>
           <p className="mt-3 text-sm text-muted-foreground">{email}</p>
+          {profile.guardianRelationship && (
+            <p className="mt-2 text-xs uppercase tracking-widest text-muted-foreground">
+              Managed by guardian · {profile.guardianRelationship}
+            </p>
+          )}
         </header>
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-8 border hairline bg-surface p-6 md:p-8">

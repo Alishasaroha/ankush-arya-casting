@@ -549,7 +549,9 @@ function EditTalentProfilePage() {
                     Manager account email
                   </span>
                   <input
-                    type="email"
+                    type="text"
+                    inputMode="email"
+                    autoComplete="email"
                     value={managerEmail}
                     onChange={(event) => setManagerEmail(event.target.value)}
                     placeholder="manager@example.com"

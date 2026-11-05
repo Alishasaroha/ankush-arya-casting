@@ -16,7 +16,7 @@ export const Route = createFileRoute("/join")({
             { title: "Register Talent Account — Ankush Arya Casting" },
             {
                 name: "description",
-                content: "Create a talent account with Ankush Arya Casting. Secure registration for actors and child artists managed by parents or legal guardians.",
+                content: "Create an account with Ankush Arya Casting. Secure registration for actors, guardians, child artists, and talent managers.",
             },
             { property: "og:title", content: "Register Talent Account — Ankush Arya Casting" },
             { property: "og:description", content: "Create your private talent profile with Ankush Arya Casting." },

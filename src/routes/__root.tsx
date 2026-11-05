@@ -49,6 +49,11 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
                 <p className="mt-4 text-sm text-muted-foreground">
                     The page didn't load. Try again or head home.
                 </p>
+                {import.meta.env.DEV && (
+                    <pre className="mt-6 max-w-full overflow-x-auto border border-destructive/30 bg-destructive/5 p-4 text-left text-xs text-destructive">
+                        {error.message}
+                    </pre>
+                )}
                 <div className="mt-10 flex flex-wrap justify-center gap-3">
                     <button
                         onClick={() => { router.invalidate(); reset(); }}

@@ -19,11 +19,13 @@ import {
 import {
   registerAdultActor,
   registerGuardianWithChild,
+  registerManager,
   RegistrationValidationError,
   EmailAlreadyRegisteredError,
 } from "./server/auth/register";
 import { verifyEmailToken } from "./server/auth/verify-email";
 import { createGuardianChildProfile } from "./server/guardian-profile";
+import { grantManagerAccess, revokeManagerAccess, ManagerAccessRequestError } from "./server/manager-access";
 import { sendVerificationEmail } from "./server/email/send-verification-email";
 import { getTalentProfile, updateTalentProfile } from "./server/talent-profile";
 import {
@@ -33,6 +35,7 @@ import {
   verifyEmailSchema,
 } from "./validation/auth";
 import { registerGuardianSchema, guardianChildProfileSchema } from "./validation/guardian";
+import { managerRegistrationSchema, grantManagerAccessSchema, revokeManagerAccessSchema } from "./validation/manager";
 import {
   talentProfileIdSchema,
   updateTalentProfileSchema,
@@ -163,6 +166,65 @@ export const registerChildArtistFn = createServerFn({
         success: false as const,
         code: "REGISTRATION_FAILED" as const,
         message: "We couldn't complete guardian registration. Please try again.",
+      };
+    }
+  });
+
+
+export const registerManagerFn = createServerFn({
+  method: "POST",
+})
+  .validator(managerRegistrationSchema)
+  .handler(async ({ data }) => {
+    try {
+      const registeredManager = await registerManager(data);
+
+      try {
+        await sendVerificationEmail({
+          to: registeredManager.user.email,
+          fullName: registeredManager.user.fullName ?? data.fullName,
+          token: registeredManager.verificationToken,
+        });
+
+        return {
+          success: true as const,
+          message:
+            "Manager account created. Verify your email before signing in. A manager can only view talent profiles after the talent or guardian explicitly grants access.",
+        };
+      } catch (emailError) {
+        console.error(
+          "Manager verification email delivery failed:",
+          emailError instanceof Error ? emailError.message : "Unknown error",
+        );
+
+        return {
+          success: true as const,
+          message:
+            "Your manager account was created, but we couldn't send the verification email. Please request a new verification email.",
+        };
+      }
+    } catch (error) {
+      if (error instanceof RegistrationValidationError) {
+        return {
+          success: false as const,
+          code: "VALIDATION_ERROR" as const,
+          fieldErrors: error.fieldErrors,
+        };
+      }
+
+      if (error instanceof EmailAlreadyRegisteredError) {
+        return {
+          success: false as const,
+          code: "EMAIL_ALREADY_REGISTERED" as const,
+          message: "An account with this email already exists.",
+        };
+      }
+
+      console.error("Manager registration failed:", error);
+      return {
+        success: false as const,
+        code: "REGISTRATION_FAILED" as const,
+        message: "We couldn't complete manager registration. Please try again.",
       };
     }
   });
@@ -341,6 +403,38 @@ export const getTalentProfileFn = createServerFn({
     const profile = await getTalentProfile(data.profileId);
 
     return { profile };
+  });
+
+
+export const grantManagerAccessFn = createServerFn({
+  method: "POST",
+})
+  .validator(grantManagerAccessSchema)
+  .handler(async ({ data }) => {
+    try {
+      const grant = await grantManagerAccess(data);
+      return { success: true as const, grant };
+    } catch (error) {
+      if (error instanceof ManagerAccessRequestError) {
+        return { success: false as const, message: error.message };
+      }
+      throw error;
+    }
+  });
+
+export const revokeManagerAccessFn = createServerFn({
+  method: "POST",
+})
+  .validator(revokeManagerAccessSchema)
+  .handler(async ({ data }) => {
+    try {
+      return await revokeManagerAccess(data);
+    } catch (error) {
+      if (error instanceof ManagerAccessRequestError) {
+        return { success: false as const, message: error.message };
+      }
+      throw error;
+    }
   });
 
 export const updateTalentProfileFn = createServerFn({

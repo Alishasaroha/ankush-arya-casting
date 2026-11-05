@@ -10,13 +10,22 @@ function isUnderEighteen(value: string): boolean {
   if (!isValidIsoDate(value)) return false;
 
   const birthDate = new Date(`${value}T00:00:00.000Z`);
-  const today = new Date();
-  let age = today.getUTCFullYear() - birthDate.getUTCFullYear();
+  const todayParts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Kolkata",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date());
+  const today = Object.fromEntries(todayParts.map((part) => [part.type, part.value]));
+  const currentYear = Number(today.year);
+  const currentMonth = Number(today.month) - 1;
+  const currentDay = Number(today.day);
+  let age = currentYear - birthDate.getUTCFullYear();
 
   const birthdayNotReached =
-    today.getUTCMonth() < birthDate.getUTCMonth() ||
-    (today.getUTCMonth() === birthDate.getUTCMonth() &&
-      today.getUTCDate() < birthDate.getUTCDate());
+    currentMonth < birthDate.getUTCMonth() ||
+    (currentMonth === birthDate.getUTCMonth() &&
+      currentDay < birthDate.getUTCDate());
 
   if (birthdayNotReached) age -= 1;
   return age >= 0 && age < 18;

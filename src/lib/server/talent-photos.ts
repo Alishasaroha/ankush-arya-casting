@@ -117,7 +117,7 @@ export async function uploadTalentProfilePhoto(input: {
     id: string;
     altText: string | null;
     sortOrder: number;
-    filePath: string;
+    filePath: string | null;
   };
 
   try {
@@ -152,7 +152,9 @@ export async function uploadTalentProfilePhoto(input: {
     id: photo.id,
     altText: photo.altText,
     sortOrder: photo.sortOrder,
-    url: getSignedTalentPhotoUrl(photo.filePath),
+    // The database column is nullable for legacy URL-based photos.
+    // Fall back to the verified path returned by ImageKit for this upload.
+    url: getSignedTalentPhotoUrl(photo.filePath ?? uploaded.filePath),
   };
 }
 

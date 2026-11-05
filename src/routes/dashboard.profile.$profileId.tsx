@@ -5,6 +5,8 @@ import {
   getCurrentUserFn,
   getTalentProfileFn,
   updateTalentProfileFn,
+  grantManagerAccessFn,
+  revokeManagerAccessFn,
 } from "@/lib/auth.functions";
 
 export const Route = createFileRoute("/dashboard/profile/$profileId")({
@@ -79,6 +81,14 @@ function EditTalentProfilePage() {
   const [deletingPhotoId, setDeletingPhotoId] = useState<string | null>(null);
   const [photoMessage, setPhotoMessage] = useState("");
   const [photoError, setPhotoError] = useState("");
+  const [managerEmail, setManagerEmail] = useState("");
+  const [managerAccess, setManagerAccess] = useState(profile.managerAccessGrants);
+  const [isGrantingManager, setIsGrantingManager] = useState(false);
+  const [revokingManagerUserId, setRevokingManagerUserId] = useState<string | null>(null);
+  const [managerAccessMessage, setManagerAccessMessage] = useState("");
+  const [managerAccessError, setManagerAccessError] = useState("");
+  const canEdit = profile.access.canEdit;
+  const canManageManagerAccess = profile.access.canManageManagerAccess;
 
   function clearStatus() {
     setMessage("");
@@ -218,6 +228,68 @@ function EditTalentProfilePage() {
     }
   }
 
+  async function handleGrantManagerAccess() {
+    setIsGrantingManager(true);
+    setManagerAccessMessage("");
+    setManagerAccessError("");
+
+    try {
+      const result = await grantManagerAccessFn({
+        data: {
+          profileId: profile.id,
+          managerEmail: managerEmail.trim(),
+        },
+      });
+
+      if (!result.success) {
+        setManagerAccessError(result.message);
+        return;
+      }
+
+      setManagerAccess((current) => [
+        result.grant,
+        ...current.filter((grant) => grant.managerUserId !== result.grant.managerUserId),
+      ]);
+      setManagerEmail("");
+      setManagerAccessMessage("Manager access granted. The manager can now view this profile.");
+    } catch (grantError) {
+      console.error("Grant manager access failed:", grantError);
+      setManagerAccessError("We couldn't grant access. Please try again.");
+    } finally {
+      setIsGrantingManager(false);
+    }
+  }
+
+  async function handleRevokeManagerAccess(managerUserId: string) {
+    setRevokingManagerUserId(managerUserId);
+    setManagerAccessMessage("");
+    setManagerAccessError("");
+
+    try {
+      const result = await revokeManagerAccessFn({
+        data: {
+          profileId: profile.id,
+          managerUserId,
+        },
+      });
+
+      if (!result.success) {
+        setManagerAccessError(result.message);
+        return;
+      }
+
+      setManagerAccess((current) =>
+        current.filter((grant) => grant.managerUserId !== managerUserId),
+      );
+      setManagerAccessMessage("Manager access revoked.");
+    } catch (revokeError) {
+      console.error("Revoke manager access failed:", revokeError);
+      setManagerAccessError("We couldn't revoke access. Please try again.");
+    } finally {
+      setRevokingManagerUserId(null);
+    }
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setIsSaving(true);
@@ -298,7 +370,7 @@ function EditTalentProfilePage() {
 
         <header className="mt-8 border-b hairline pb-6">
           <p className="text-xs uppercase tracking-[0.3em] text-gold">Ankush Arya Casting</p>
-          <h1 className="mt-3 font-display text-3xl md:text-5xl">Edit Talent Profile</h1>
+          <h1 className="mt-3 font-display text-3xl md:text-5xl">{canEdit ? "Edit Talent Profile" : "Talent Profile"}</h1>
           <p className="mt-3 text-sm text-muted-foreground">{email}</p>
           {profile.guardianRelationship && (
             <p className="mt-2 text-xs uppercase tracking-widest text-muted-foreground">
@@ -308,6 +380,12 @@ function EditTalentProfilePage() {
         </header>
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-8 border hairline bg-surface p-6 md:p-8">
+          {!canEdit && (
+            <p role="note" className="border border-gold/30 bg-surface-elevated p-4 text-sm text-muted-foreground">
+              You have read-only manager access to this profile. Profile details and photos cannot be changed.
+            </p>
+          )}
+          <fieldset disabled={!canEdit} className="contents">
           <section className="space-y-6">
             <div>
               <h2 className="font-display text-2xl">Basic Information</h2>
@@ -454,12 +532,80 @@ function EditTalentProfilePage() {
               </div>
             )}
           </section>
+          </fieldset>
+
+          {canManageManagerAccess && (
+            <section className="space-y-5 border-t hairline pt-8">
+              <div>
+                <h2 className="font-display text-2xl">Manager Access</h2>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Give a verified manager permission to view this profile. Access is read-only and can be revoked at any time.
+                </p>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
+                <label className="block text-sm">
+                  <span className="mb-2 block text-xs uppercase tracking-widest text-muted-foreground">
+                    Manager account email
+                  </span>
+                  <input
+                    type="email"
+                    required
+                    value={managerEmail}
+                    onChange={(event) => setManagerEmail(event.target.value)}
+                    placeholder="manager@example.com"
+                    className="w-full border hairline bg-background px-4 py-3 outline-none focus:border-gold"
+                  />
+                </label>
+                <button
+                  type="button"
+                  onClick={handleGrantManagerAccess}
+                  disabled={isGrantingManager || !managerEmail.trim()}
+                  className="self-end bg-foreground px-5 py-3 text-xs uppercase tracking-widest text-background hover:opacity-80 disabled:opacity-50"
+                >
+                  {isGrantingManager ? "Granting..." : "Grant access"}
+                </button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                The manager must already have a Manager account and a verified email address.
+              </p>
+
+              {managerAccess.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No managers currently have access.</p>
+              ) : (
+                <div className="divide-y divide-border border-y hairline">
+                  {managerAccess.map((grant) => (
+                    <div key={grant.id} className="flex flex-wrap items-center justify-between gap-4 py-4">
+                      <div>
+                        <p className="text-sm font-medium">
+                          {grant.managerUser.fullName || grant.managerUser.email}
+                        </p>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {grant.managerUser.email} · Granted {new Date(grant.grantedAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleRevokeManagerAccess(grant.managerUserId)}
+                        disabled={revokingManagerUserId !== null}
+                        className="border hairline px-4 py-2 text-xs uppercase tracking-widest text-muted-foreground hover:border-destructive hover:text-destructive disabled:opacity-50"
+                      >
+                        {revokingManagerUserId === grant.managerUserId ? "Revoking..." : "Revoke"}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {managerAccessMessage && <p role="status" className="text-sm text-green-700">{managerAccessMessage}</p>}
+              {managerAccessError && <p role="alert" className="text-sm text-destructive">{managerAccessError}</p>}
+            </section>
+          )}
 
           {message && <p role="status" className="text-sm text-green-700">{message}</p>}
           {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
 
           <div className="flex flex-wrap items-center gap-4 border-t hairline pt-6">
-            <button type="submit" disabled={isSaving || isUploadingPhotos || deletingPhotoId !== null} className="bg-foreground px-6 py-3 text-xs uppercase tracking-widest text-background transition-opacity hover:opacity-80 disabled:opacity-50">
+            <button type="submit" disabled={!canEdit || isSaving || isUploadingPhotos || deletingPhotoId !== null} className="bg-foreground px-6 py-3 text-xs uppercase tracking-widest text-background transition-opacity hover:opacity-80 disabled:opacity-50">
               {isSaving ? "Saving..." : "Save changes"}
             </button>
             <Link to="/dashboard" className="text-xs uppercase tracking-widest text-muted-foreground hover:text-foreground">

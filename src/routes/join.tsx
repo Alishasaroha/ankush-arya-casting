@@ -6,6 +6,7 @@ import { ShieldCheck, User, Users, Lock, Mail, AlertCircle, ArrowRight } from "l
 import {
   registerAdultActorFn,
   registerChildArtistFn,
+  registerManagerFn,
   resendVerificationFn,
 } from "@/lib/auth.functions";
 
@@ -24,7 +25,7 @@ export const Route = createFileRoute("/join")({
     component: Join,
 });
 
-type AccountType = "actor" | "child_artist";
+type AccountType = "actor" | "child_artist" | "manager";
 
 const TALENT_CATEGORIES = [
     "Actor",
@@ -73,6 +74,7 @@ function Join() {
     const [isResending, setIsResending] = useState(false);
 const [resendNotice, setResendNotice] = useState<string | null>(null);
     const isChildArtist = accountType === "child_artist";
+    const isManager = accountType === "manager";
 
     function handleAccountTypeChange(type: AccountType) {
         setAccountType(type);
@@ -137,14 +139,23 @@ async function handleSubmit(e: FormEvent<HTMLFormElement>) {
                     confirmPassword,
                 },
             })
-            : await registerAdultActorFn({
-                data: {
-                    fullName,
-                    email,
-                    password,
-                    confirmPassword,
-                },
-            });
+            : isManager
+                ? await registerManagerFn({
+                    data: {
+                        fullName,
+                        email,
+                        password,
+                        confirmPassword,
+                    },
+                })
+                : await registerAdultActorFn({
+                    data: {
+                        fullName,
+                        email,
+                        password,
+                        confirmPassword,
+                    },
+                });
 
         if (result.success) {
             setFormNotice(result.message);
@@ -241,7 +252,7 @@ async function handleResendVerification() {
                         <legend className="block text-xs tracking-[0.24em] uppercase text-muted-foreground mb-4">
                             Select Registration Option *
                         </legend>
-                        <div className="grid gap-4 sm:grid-cols-2">
+                        <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
                             <AccountOptionCard
                                 id="account-type-actor"
                                 name="accountType"
@@ -260,6 +271,17 @@ async function handleResendVerification() {
                                 description="For parents or legal guardians creating and managing a profile on behalf of a minor talent."
                                 icon={<Users className="h-5 w-5" />}
                                 isSelected={accountType === "child_artist"}
+                                onChange={handleAccountTypeChange}
+                            />
+
+                            <AccountOptionCard
+                                id="account-type-manager"
+                                name="accountType"
+                                value="manager"
+                                title="Register as a Manager"
+                                description="For talent managers who need profile access only after an actor or guardian explicitly approves it."
+                                icon={<ShieldCheck className="h-5 w-5" />}
+                                isSelected={accountType === "manager"}
                                 onChange={handleAccountTypeChange}
                             />
                         </div>
@@ -283,9 +305,20 @@ async function handleResendVerification() {
                                 </div>
                             </div>
                         )}
+                        {isManager && (
+                            <div role="note" className="mt-6 border hairline bg-surface-elevated/70 p-5 text-xs leading-relaxed text-muted-foreground">
+                                <p className="font-medium text-foreground">Manager access is consent-based</p>
+                                <p className="mt-2">
+                                    Creating a manager account does not reveal any talent profiles. An actor or the
+                                    child's guardian must grant access to each profile individually, and can revoke it at any time.
+                                    Manager accounts have read-only profile access.
+                                </p>
+                            </div>
+                        )}
                     </fieldset>
 
                     <form onSubmit={handleSubmit} className="space-y-10">
+                        {!isManager && (
                         {/* Primary Talent Category */}
                         <div className="border-t hairline pt-8">
                             <label className="block text-xs tracking-[0.24em] uppercase text-muted-foreground mb-3">
@@ -326,22 +359,23 @@ async function handleResendVerification() {
                                 })}
                             </div>
                         </div>
+                        )}
 
                         {/* Registrant / Actor Information */}
                         <div className="border-t hairline pt-8 space-y-6">
                             <h3 className="font-display text-2xl">
-                                {accountType === "actor" ? "Personal Details" : "Guardian & Child Artist Information"}
+                                {accountType === "child_artist" ? "Guardian & Child Artist Information" : isManager ? "Manager Details" : "Personal Details"}
                             </h3>
 
-                            {accountType === "actor" ? (
+                            {accountType !== "child_artist" ? (
                                 <InputField
                                     id="fullName"
                                     name="fullName"
-                                    label="Full Legal Name"
+                                    label={isManager ? "Manager Full Name" : "Full Legal Name"}
                                     type="text"
                                     required
                                     autoComplete="name"
-                                    placeholder="Enter your full legal name"
+                                    placeholder={isManager ? "Enter your professional name" : "Enter your full legal name"}
                                     value={fullName}
                                     onChange={(e) => setFullName(e.target.value)}
                                 />

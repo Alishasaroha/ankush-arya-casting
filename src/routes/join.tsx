@@ -401,9 +401,9 @@ async function handleResendVerification() {
                                             required
                                         />
                                         <span>
-                                            I confirm that I am this child's parent or legally authorized guardian and have
-                                            authority to create this private talent profile and provide the submitted
-                                            information and media.
+                                            I confirm that I am at least 18 years old, am this child's parent or legally authorized
+                                            guardian, and have authority to create this private talent profile and provide
+                                            the submitted information and media.
                                         </span>
                                     </label>
                                 </div>

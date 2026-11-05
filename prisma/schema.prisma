@@ -33,6 +33,7 @@ model User {
   guardianProfiles       TalentProfile[]         @relation("PrimaryGuardian")
   managerAccessReceived ManagerAccessGrant[]     @relation("ManagerAccessRecipient")
   managerAccessGranted  ManagerAccessGrant[]     @relation("ManagerAccessIssuer")
+  managerAccessRevoked  ManagerAccessGrant[]     @relation("ManagerAccessRevoker")
   sessions               Session[]
   emailVerificationToken EmailVerificationToken?
 }
@@ -153,14 +154,16 @@ model ManagerAccessGrant {
   grantedByUserId String   @db.Uuid
   grantedAt       DateTime @default(now())
   revokedAt       DateTime?
+  revokedByUserId String?  @db.Uuid
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
   talentProfile TalentProfile @relation(fields: [talentProfileId], references: [id], onDelete: Cascade)
   managerUser   User          @relation("ManagerAccessRecipient", fields: [managerUserId], references: [id], onDelete: Cascade)
   grantedByUser User          @relation("ManagerAccessIssuer", fields: [grantedByUserId], references: [id], onDelete: Restrict)
+  revokedByUser User?           @relation("ManagerAccessRevoker", fields: [revokedByUserId], references: [id], onDelete: SetNull)
 
-  @@unique([talentProfileId, managerUserId])
+  @@index([talentProfileId, managerUserId, revokedAt])
   @@index([managerUserId, revokedAt])
   @@index([talentProfileId, revokedAt])
 }

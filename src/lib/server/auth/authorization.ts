@@ -164,6 +164,150 @@ export async function requireTalentProfileAccess(profileId: string) {
 }
 
 /**
+ * Read access may be granted to a MANAGER for one profile only.
+ * The result explicitly marks manager sessions as read-only.
+ */
+export async function requireTalentProfileReadAccess(profileId: string) {
+  const user = await requireAuthenticatedUser();
+
+  const profile = await prisma.talentProfile.findUnique({
+    where: { id: profileId },
+    select: {
+      id: true,
+      fullName: true,
+      ownerUserId: true,
+      primaryGuardianUserId: true,
+      dateOfBirth: true,
+      guardianRelationship: true,
+      heightCm: true,
+      gender: true,
+      location: true,
+      bio: true,
+      status: true,
+      languages: true,
+      experienceYears: true,
+      experienceSummary: true,
+      instagramHandle: true,
+      introVideoUrl: true,
+      links: {
+        orderBy: { sortOrder: "asc" },
+        select: {
+          id: true,
+          type: true,
+          title: true,
+          url: true,
+          sortOrder: true,
+        },
+      },
+      photos: {
+        orderBy: { sortOrder: "asc" },
+        select: {
+          id: true,
+          url: true,
+          altText: true,
+          sortOrder: true,
+          filePath: true,
+        },
+      },
+      managerAccessGrants: {
+        where: { revokedAt: null },
+        orderBy: { grantedAt: "desc" },
+        select: {
+          id: true,
+          managerUserId: true,
+          grantedAt: true,
+          managerUser: {
+            select: { email: true, fullName: true },
+          },
+        },
+      },
+      updatedAt: true,
+    },
+  });
+
+  if (!profile) {
+    throw new TalentProfileNotFoundError();
+  }
+
+  const isAdmin = user.roles.includes(APP_ROLES.ADMIN);
+  const isOwner =
+    user.roles.includes(APP_ROLES.TALENT) &&
+    profile.ownerUserId === user.userId;
+  const isPrimaryGuardian =
+    user.roles.includes(APP_ROLES.GUARDIAN) &&
+    profile.primaryGuardianUserId === user.userId;
+  const canManageManagerAccess = isOwner || isPrimaryGuardian;
+
+  if (isAdmin || canManageManagerAccess) {
+    return {
+      profile,
+      access: {
+        canEdit: true,
+        canManageManagerAccess,
+        isManagerView: false,
+      },
+    };
+  }
+
+  if (user.roles.includes(APP_ROLES.MANAGER)) {
+    const activeGrant = await prisma.managerAccessGrant.findFirst({
+      where: {
+        talentProfileId: profileId,
+        managerUserId: user.userId,
+        revokedAt: null,
+      },
+      select: { id: true },
+    });
+
+    if (activeGrant) {
+      return {
+        profile,
+        access: {
+          canEdit: false,
+          canManageManagerAccess: false,
+          isManagerView: true,
+        },
+      };
+    }
+  }
+
+  throw new AuthorizationError();
+}
+
+/**
+ * Only the profile owner or its assigned primary guardian may grant or
+ * revoke manager access. ADMIN cannot provide consent on another user's behalf.
+ */
+export async function requireTalentProfileGrantControl(profileId: string) {
+  const user = await requireAuthenticatedUser();
+  const profile = await prisma.talentProfile.findUnique({
+    where: { id: profileId },
+    select: {
+      id: true,
+      ownerUserId: true,
+      primaryGuardianUserId: true,
+    },
+  });
+
+  if (!profile) {
+    throw new TalentProfileNotFoundError();
+  }
+
+  const isOwner =
+    user.roles.includes(APP_ROLES.TALENT) &&
+    profile.ownerUserId === user.userId;
+  const isPrimaryGuardian =
+    user.roles.includes(APP_ROLES.GUARDIAN) &&
+    profile.primaryGuardianUserId === user.userId;
+
+  if (!isOwner && !isPrimaryGuardian) {
+    throw new AuthorizationError();
+  }
+
+  return { user, profile };
+}
+
+/**
  * List only profiles the current user is allowed to see.
  * ADMIN can list all profiles. TALENT and GUARDIAN are scoped to
  * their own ownership/primary-guardian relationships.
@@ -172,6 +316,7 @@ export async function listAccessibleTalentProfiles() {
   const user = await requireAnyRole([
     APP_ROLES.TALENT,
     APP_ROLES.GUARDIAN,
+    APP_ROLES.MANAGER,
     APP_ROLES.ADMIN,
   ]);
 
@@ -184,6 +329,13 @@ export async function listAccessibleTalentProfiles() {
     ...(user.roles.includes(APP_ROLES.GUARDIAN)
       ? [{ primaryGuardianUserId: user.userId }]
       : []),
+    ...(user.roles.includes(APP_ROLES.MANAGER)
+      ? [{
+          managerAccessGrants: {
+            some: { managerUserId: user.userId, revokedAt: null },
+          },
+        }]
+      : []),
   ];
 
   return prisma.talentProfile.findMany({
@@ -195,8 +347,18 @@ export async function listAccessibleTalentProfiles() {
       heightCm: true,
       gender: true,
       location: true,
+      ownerUserId: true,
+      primaryGuardianUserId: true,
       updatedAt: true,
     },
     orderBy: { updatedAt: "desc" },
-  });
+  }).then((profiles) =>
+    profiles.map(({ ownerUserId, primaryGuardianUserId, ...profile }) => ({
+      ...profile,
+      canEdit:
+        isAdmin ||
+        ownerUserId === user.userId ||
+        primaryGuardianUserId === user.userId,
+    })),
+  );
 }

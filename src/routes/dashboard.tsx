@@ -6,12 +6,13 @@ import {
   useNavigate,
   useRouterState,
 } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 
 import {
   getCurrentUserFn,
   getMyTalentProfilesFn,
   logoutFn,
+  createGuardianChildProfileFn,
 } from "@/lib/auth.functions";
 
 import { LogOut, ShieldCheck, Users } from "lucide-react";
@@ -44,11 +45,48 @@ function DashboardPage() {
 
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [error, setError] = useState("");
+  const [childName, setChildName] = useState("");
+  const [childDateOfBirth, setChildDateOfBirth] = useState("");
+  const [guardianRelationship, setGuardianRelationship] = useState("Parent");
+  const [guardianConsent, setGuardianConsent] = useState(false);
+  const [isCreatingChild, setIsCreatingChild] = useState(false);
+  const [childProfileError, setChildProfileError] = useState("");
 
   // This is a parent route. Render its child route instead of the dashboard
   // when the user opens a nested page such as /dashboard/profile/:profileId.
   if (pathname.startsWith("/dashboard/profile/")) {
     return <Outlet />;
+  }
+
+  async function handleAddChildProfile(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setIsCreatingChild(true);
+    setChildProfileError("");
+
+    try {
+      const { profile } = await createGuardianChildProfileFn({
+        data: {
+          childName,
+          dateOfBirth: childDateOfBirth,
+          guardianRelationship,
+          guardianConsent,
+        },
+      });
+
+      await navigate({
+        to: "/dashboard/profile/$profileId",
+        params: { profileId: profile.id },
+      });
+    } catch (createError) {
+      console.error("Additional child profile creation failed:", createError);
+      setChildProfileError(
+        createError instanceof Error
+          ? createError.message
+          : "We couldn't create this child profile. Please check the details and try again.",
+      );
+    } finally {
+      setIsCreatingChild(false);
+    }
   }
 
   async function handleLogout() {
@@ -125,6 +163,90 @@ function DashboardPage() {
             <p className="mt-2 text-sm">{user.roles.join(", ")}</p>
           </div>
         </section>
+
+        {user.roles.includes("GUARDIAN") && (
+          <section className="mt-8 border hairline bg-surface p-8">
+            <h2 className="font-display text-2xl">Add Another Child Artist</h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Create another private profile under this verified guardian account.
+              Each child profile remains linked to your account.
+            </p>
+
+            <form onSubmit={handleAddChildProfile} className="mt-6 grid gap-5 md:grid-cols-2">
+              <label className="block text-sm">
+                <span className="mb-2 block text-xs uppercase tracking-widest text-muted-foreground">
+                  Child artist full name
+                </span>
+                <input
+                  required
+                  minLength={2}
+                  maxLength={100}
+                  value={childName}
+                  onChange={(event) => setChildName(event.target.value)}
+                  className="w-full border hairline bg-background px-4 py-3 outline-none focus:border-gold"
+                />
+              </label>
+
+              <label className="block text-sm">
+                <span className="mb-2 block text-xs uppercase tracking-widest text-muted-foreground">
+                  Date of birth
+                </span>
+                <input
+                  required
+                  type="date"
+                  value={childDateOfBirth}
+                  onChange={(event) => setChildDateOfBirth(event.target.value)}
+                  className="w-full border hairline bg-background px-4 py-3 outline-none focus:border-gold"
+                />
+              </label>
+
+              <label className="block text-sm md:col-span-2">
+                <span className="mb-2 block text-xs uppercase tracking-widest text-muted-foreground">
+                  Relationship to child
+                </span>
+                <input
+                  required
+                  minLength={2}
+                  maxLength={80}
+                  value={guardianRelationship}
+                  onChange={(event) => setGuardianRelationship(event.target.value)}
+                  className="w-full border hairline bg-background px-4 py-3 outline-none focus:border-gold"
+                />
+              </label>
+
+              <label className="flex items-start gap-3 text-xs leading-relaxed text-muted-foreground md:col-span-2">
+                <input
+                  type="checkbox"
+                  checked={guardianConsent}
+                  onChange={(event) => setGuardianConsent(event.target.checked)}
+                  required
+                  className="mt-0.5 accent-gold"
+                />
+                <span>
+                  I confirm that I am this child's parent or legally authorized guardian
+                  and have authority to create this private talent profile and provide
+                  the submitted information and media.
+                </span>
+              </label>
+
+              {childProfileError && (
+                <p role="alert" className="text-sm text-destructive md:col-span-2">
+                  {childProfileError}
+                </p>
+              )}
+
+              <div className="md:col-span-2">
+                <button
+                  type="submit"
+                  disabled={isCreatingChild}
+                  className="bg-foreground px-6 py-3 text-xs uppercase tracking-widest text-background hover:opacity-80 disabled:opacity-50"
+                >
+                  {isCreatingChild ? "Creating profile..." : "Create child profile"}
+                </button>
+              </div>
+            </form>
+          </section>
+        )}
 
         <section className="mt-8 border hairline bg-surface p-8">
           <h2 className="font-display text-2xl">Accessible Talent Profiles</h2>

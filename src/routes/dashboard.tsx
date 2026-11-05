@@ -168,7 +168,7 @@ function DashboardPage() {
           <section className="mt-8 border hairline bg-surface p-8">
             <h2 className="font-display text-2xl">Add Another Child Artist</h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              Create another private profile under this verified guardian account.
+              Create another private profile under your guardian account.
               Each child profile remains linked to your account.
             </p>
 

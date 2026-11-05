@@ -318,8 +318,8 @@ async function handleResendVerification() {
                     </fieldset>
 
                     <form onSubmit={handleSubmit} className="space-y-10">
-                        {!isManager && (
                         {/* Primary Talent Category */}
+                        {!isManager && (
                         <div className="border-t hairline pt-8">
                             <label className="block text-xs tracking-[0.24em] uppercase text-muted-foreground mb-3">
                                 Primary Talent Category *

@@ -31,6 +31,8 @@ model User {
   roles                  UserRole[]
   ownedProfile           TalentProfile?          @relation("ProfileOwner")
   guardianProfiles       TalentProfile[]         @relation("PrimaryGuardian")
+  managerAccessReceived ManagerAccessGrant[]     @relation("ManagerAccessRecipient")
+  managerAccessGranted  ManagerAccessGrant[]     @relation("ManagerAccessIssuer")
   sessions               Session[]
   emailVerificationToken EmailVerificationToken?
 }
@@ -77,8 +79,9 @@ model TalentProfile {
 
   primaryGuardian User? @relation("PrimaryGuardian", fields: [primaryGuardianUserId], references: [id], onDelete: Restrict)
 
-  links  TalentProfileLink[]
-  photos TalentProfilePhoto[]
+  links              TalentProfileLink[]
+  photos             TalentProfilePhoto[]
+  managerAccessGrants ManagerAccessGrant[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -140,4 +143,24 @@ model Session {
 
   @@index([userId, expiresAt])
   @@index([expiresAt])
+}
+
+
+model ManagerAccessGrant {
+  id              String   @id @default(uuid()) @db.Uuid
+  talentProfileId String   @db.Uuid
+  managerUserId   String   @db.Uuid
+  grantedByUserId String   @db.Uuid
+  grantedAt       DateTime @default(now())
+  revokedAt       DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  talentProfile TalentProfile @relation(fields: [talentProfileId], references: [id], onDelete: Cascade)
+  managerUser   User          @relation("ManagerAccessRecipient", fields: [managerUserId], references: [id], onDelete: Cascade)
+  grantedByUser User          @relation("ManagerAccessIssuer", fields: [grantedByUserId], references: [id], onDelete: Restrict)
+
+  @@unique([talentProfileId, managerUserId])
+  @@index([managerUserId, revokedAt])
+  @@index([talentProfileId, revokedAt])
 }

@@ -5,14 +5,15 @@ CREATE TABLE "ManagerAccessGrant" (
   "grantedByUserId" UUID NOT NULL,
   "grantedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
   "revokedAt" TIMESTAMP(3),
+  "revokedByUserId" UUID,
   "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
   "updatedAt" TIMESTAMP(3) NOT NULL,
 
   CONSTRAINT "ManagerAccessGrant_pkey" PRIMARY KEY ("id")
 );
 
-CREATE UNIQUE INDEX "ManagerAccessGrant_talentProfileId_managerUserId_key"
-  ON "ManagerAccessGrant"("talentProfileId", "managerUserId");
+CREATE INDEX "ManagerAccessGrant_talentProfileId_managerUserId_revokedAt_idx"
+  ON "ManagerAccessGrant"("talentProfileId", "managerUserId", "revokedAt");
 
 CREATE INDEX "ManagerAccessGrant_managerUserId_revokedAt_idx"
   ON "ManagerAccessGrant"("managerUserId", "revokedAt");
@@ -34,3 +35,8 @@ ALTER TABLE "ManagerAccessGrant"
   ADD CONSTRAINT "ManagerAccessGrant_grantedByUserId_fkey"
   FOREIGN KEY ("grantedByUserId") REFERENCES "User"("id")
   ON DELETE RESTRICT ON UPDATE CASCADE;
+
+ALTER TABLE "ManagerAccessGrant"
+  ADD CONSTRAINT "ManagerAccessGrant_revokedByUserId_fkey"
+  FOREIGN KEY ("revokedByUserId") REFERENCES "User"("id")
+  ON DELETE SET NULL ON UPDATE CASCADE;

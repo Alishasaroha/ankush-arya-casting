@@ -550,7 +550,6 @@ function EditTalentProfilePage() {
                   </span>
                   <input
                     type="email"
-                    required
                     value={managerEmail}
                     onChange={(event) => setManagerEmail(event.target.value)}
                     placeholder="manager@example.com"

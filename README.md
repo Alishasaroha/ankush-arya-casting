@@ -110,9 +110,9 @@ A separate Express API server is not part of the current architecture. Backend o
 - Child registration requires a date of birth under 18, a declared relationship, and an explicit guardian authorization confirmation. The confirmation timestamp is retained with the child profile.
 - Database ownership constraints permit an unclaimed record, a talent-owned record, or a guardian-managed record, while preventing a profile from being linked to both an owner and a guardian.
 - Protected profile-detail and profile-update server functions check access to the requested profile before returning or changing data.
-- The profile editor supports personal information, languages, experience, previous-work and portfolio links, Instagram, YouTube introduction-video URLs, and profile-photo uploads to private ImageKit storage. The application stores ImageKit file IDs and paths in PostgreSQL and serves photos through short-lived signed URLs. Ownership and guardian relationship fields cannot be changed through this form.
+- The profile editor supports personal information, languages, experience, previous-work and portfolio links, Instagram, YouTube introduction-video URLs, and profile-photo uploads to private ImageKit storage. The application stores ImageKit file IDs and paths in PostgreSQL and serves photos through signed URLs that expire after five minutes. Ownership and guardian relationship fields cannot be changed through this form.
 
-**Authorization limitations:** Guardian registration currently records a self-declaration and consent timestamp; it does not independently verify legal-guardian identity or custody authority. The agency must verify that relationship before production use with child profiles. Manager access is deliberately not granted until the actor-approved, revocable manager-access relationship is implemented. No public registration flow can assign the ADMIN role. The first agency administrator is provisioned manually by a database owner using `prisma/bootstrap-admin.sql`. Route guards improve navigation but are not a substitute for authorization inside every private server operation.
+**Authorization limitations:** Guardian registration currently records a self-declaration and consent timestamp; it does not independently verify legal-guardian identity or custody authority. The agency must verify that relationship before production use with child profiles. Manager accounts can register and verify their email, but receive no profile access by default. A talent owner or assigned guardian must grant read-only access to each individual profile; that access can be revoked and is checked server-side. No public registration flow can assign the ADMIN role. The first agency administrator is provisioned manually by a database owner using `prisma/bootstrap-admin.sql`. Route guards improve navigation but are not a substitute for authorization inside every private server operation.
 
 ## Authorization model
 
@@ -314,7 +314,7 @@ IMAGEKIT_URL_ENDPOINT="https://ik.imagekit.io/your_imagekit_id"
 - `IMAGEKIT_PRIVATE_KEY` — ImageKit server secret used by the Node.js SDK. Never expose it to browser code or commit it.
 - `IMAGEKIT_URL_ENDPOINT` — HTTPS ImageKit delivery endpoint used to generate signed private-photo URLs.
 
-Profile photos are uploaded through same-origin, authenticated server routes. The server checks profile access, accepts JPG/PNG/WebP images up to 5 MB each, marks ImageKit assets private, and limits each profile to 30 photos. PostgreSQL stores the ImageKit file ID and file path; photo responses contain signed URLs that expire after one hour. The introduction-video field accepts YouTube video URLs only; video files are not uploaded or stored.
+Profile photos are uploaded through same-origin, authenticated server routes. The server checks profile access, accepts JPG/PNG/WebP images up to 5 MB each, marks ImageKit assets private, and limits each profile to 30 photos. PostgreSQL stores the ImageKit file ID and file path; photo responses contain signed URLs that expire after five minutes. The introduction-video field accepts YouTube video URLs only; video files are not uploaded or stored.
 
 Gmail SMTP is being used for initial development and low-volume verification messages. Keep the Google App Password private and never commit it. For higher-volume production delivery, move to a transactional email provider with an authenticated agency-owned domain.
 
@@ -371,11 +371,11 @@ The first version focuses on a private talent database and basic agency administ
 | 5 | Role and profile-ownership authorization foundation | Implemented on feature branch; local validation pending |
 | 6 | Initial admin provisioning | Bootstrap SQL script implemented; local execution pending |
 | 7 | Guardian and child artist registration, under-18 validation, and multiple child profiles per guardian | Implemented on feature branch; migration and local flow verification pending |
-| 8 | Actor-approved manager access and revocation | Planned |
+| 8 | Actor/guardian-approved, per-profile manager access and revocation | Implemented on feature branch; local migration, build, and access-control verification pending |
 | 9 | Talent profile management | Implemented and tested locally, including profile editing and private photo management |
 | 10 | Admin talent management | Directory, server-side search/filters, pagination, manual creation, profile editing, status management, and reversible archiving implemented |
 | 11 | Private profile-photo storage with ImageKit and YouTube intro links | Implemented and tested locally; photos upload, persist after refresh, and can be deleted |
-| 12 | Independent guardian verification, manager consent, further security hardening, automated tests, and deployment | Planned |
+| 12 | Independent guardian verification, further security hardening, automated tests, and deployment | Planned |
 
 ## Git workflow
 

@@ -13,7 +13,7 @@ const MAX_REQUEST_BYTES = 5 * 1024 * 1024 + 256 * 1024;
 async function readRequestBodyWithLimit(
   request: Request,
   maxBytes: number,
-): Promise<Uint8Array> {
+): Promise<ArrayBuffer> {
   if (!request.body) {
     throw new TalentPhotoRequestError("Select an image to upload.");
   }
@@ -44,11 +44,13 @@ async function readRequestBodyWithLimit(
     reader.releaseLock();
   }
 
-  const body = new Uint8Array(totalBytes);
+  // Use an ArrayBuffer so the request body matches the DOM BodyInit type.
+  const body = new ArrayBuffer(totalBytes);
+  const bodyView = new Uint8Array(body);
   let offset = 0;
 
   for (const chunk of chunks) {
-    body.set(chunk, offset);
+    bodyView.set(chunk, offset);
     offset += chunk.byteLength;
   }
 

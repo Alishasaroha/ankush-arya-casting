@@ -1,6 +1,7 @@
 import { generateEmailVerificationToken } from "./verification-token";
 import { registerSchema } from "../../validation/auth";
 import { registerGuardianSchema } from "../../validation/guardian";
+import { managerRegistrationSchema } from "../../validation/manager";
 import { prisma } from "../prisma";
 import { hashPassword } from "./password";
 
@@ -197,6 +198,60 @@ export async function registerGuardianWithChild(input: unknown) {
     });
 
     return { ...registeredGuardian, verificationToken: token };
+  } catch (error) {
+    if (isUniqueConstraintError(error)) {
+      throw new EmailAlreadyRegisteredError();
+    }
+    throw error;
+  }
+}
+
+
+/**
+ * A manager account has no profile privileges by default. It receives only
+ * read access to profiles for which a talent or guardian creates an active grant.
+ */
+export async function registerManager(input: unknown) {
+  const result = managerRegistrationSchema.safeParse(input);
+
+  if (!result.success) {
+    const fieldErrors = Object.fromEntries(
+      Object.entries(result.error.flatten().fieldErrors).filter(([, messages]) => messages),
+    ) as Record<string, string[]>;
+
+    throw new RegistrationValidationError(fieldErrors);
+  }
+
+  const { fullName, email, password } = result.data;
+  const passwordHash = await hashPassword(password);
+  const { token, tokenHash } = generateEmailVerificationToken();
+  const expiresAt = new Date(Date.now() + 30 * 60 * 1000);
+
+  try {
+    const registeredManager = await prisma.$transaction(async (tx) => {
+      const managerRole = await tx.role.upsert({
+        where: { name: "MANAGER" },
+        update: {},
+        create: { name: "MANAGER" },
+      });
+
+      const user = await tx.user.create({
+        data: { email, passwordHash, fullName },
+        select: { id: true, email: true, fullName: true, createdAt: true },
+      });
+
+      await tx.userRole.create({
+        data: { userId: user.id, roleId: managerRole.id },
+      });
+
+      await tx.emailVerificationToken.create({
+        data: { tokenHash, userId: user.id, expiresAt },
+      });
+
+      return { user };
+    });
+
+    return { ...registeredManager, verificationToken: token };
   } catch (error) {
     if (isUniqueConstraintError(error)) {
       throw new EmailAlreadyRegisteredError();

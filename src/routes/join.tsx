@@ -5,6 +5,7 @@ import { PageHero } from "@/components/site/PageHero";
 import { ShieldCheck, User, Users, Lock, Mail, AlertCircle, ArrowRight } from "lucide-react";
 import {
   registerAdultActorFn,
+  registerChildArtistFn,
   resendVerificationFn,
 } from "@/lib/auth.functions";
 
@@ -63,7 +64,9 @@ function Join() {
     const [fullName, setFullName] = useState("");
     const [guardianName, setGuardianName] = useState("");
     const [childName, setChildName] = useState("");
+    const [childDateOfBirth, setChildDateOfBirth] = useState("");
     const [guardianRelationship, setGuardianRelationship] = useState("Parent");
+    const [guardianConsent, setGuardianConsent] = useState(false);
     const [validationError, setValidationError] = useState<string | null>(null);
     const [formNotice, setFormNotice] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -88,16 +91,17 @@ async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     setValidationError(null);
     setFormNotice(null);
 
-    // Child registration is not implemented yet.
-    if (isChildArtist) {
-        setValidationError(
-            "Child artist registration is not available yet. Please check back later."
-        );
-        return;
-    }
-
     // Frontend validation
-    if (!fullName.trim()) {
+    if (isChildArtist) {
+        if (!guardianName.trim() || !childName.trim() || !childDateOfBirth) {
+            setValidationError("Please complete the guardian and child details.");
+            return;
+        }
+        if (!guardianConsent) {
+            setValidationError("Please confirm that you are the child's parent or legally authorized guardian.");
+            return;
+        }
+    } else if (!fullName.trim()) {
         setValidationError("Please enter your full legal name.");
         return;
     }
@@ -120,14 +124,27 @@ async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     setIsSubmitting(true);
 
     try {
-        const result = await registerAdultActorFn({
-            data: {
-                fullName,
-                email,
-                password,
-                confirmPassword,
-            },
-        });
+        const result = isChildArtist
+            ? await registerChildArtistFn({
+                data: {
+                    guardianName,
+                    guardianRelationship,
+                    childName,
+                    dateOfBirth: childDateOfBirth,
+                    guardianConsent,
+                    email,
+                    password,
+                    confirmPassword,
+                },
+            })
+            : await registerAdultActorFn({
+                data: {
+                    fullName,
+                    email,
+                    password,
+                    confirmPassword,
+                },
+            });
 
         if (result.success) {
             setFormNotice(result.message);
@@ -363,6 +380,32 @@ async function handleResendVerification() {
                                         value={childName}
                                         onChange={(e) => setChildName(e.target.value)}
                                     />
+
+                                    <InputField
+                                        id="childDateOfBirth"
+                                        name="childDateOfBirth"
+                                        label="Child Artist Date of Birth"
+                                        type="date"
+                                        required
+                                        value={childDateOfBirth}
+                                        onChange={(e) => setChildDateOfBirth(e.target.value)}
+                                        helperText="Child artist accounts are for performers under 18."
+                                    />
+
+                                    <label className="flex items-start gap-3 text-xs leading-relaxed text-muted-foreground">
+                                        <input
+                                            type="checkbox"
+                                            checked={guardianConsent}
+                                            onChange={(e) => setGuardianConsent(e.target.checked)}
+                                            className="mt-0.5 accent-gold"
+                                            required
+                                        />
+                                        <span>
+                                            I confirm that I am this child's parent or legally authorized guardian and have
+                                            authority to create this private talent profile and provide the submitted
+                                            information and media.
+                                        </span>
+                                    </label>
                                 </div>
                             )}
                         </div>

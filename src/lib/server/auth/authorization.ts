@@ -87,12 +87,10 @@ export async function requireAnyRole(roles: readonly AppRole[]) {
 }
 
 /**
- * Enforce record-level access for a single talent profile.
- * ADMIN has agency-wide access. TALENT can access their own profile.
- * GUARDIAN can access profiles explicitly assigned to them.
- *
- * MANAGER access is intentionally denied here until the separate,
- * actor-approved and revocable manager-grant model is implemented.
+ * Enforce edit-level access for a single talent profile.
+ * ADMIN has agency-wide edit access. TALENT can edit their own profile.
+ * GUARDIAN can edit profiles explicitly assigned to them.
+ * MANAGER grants are read-only and are checked by requireTalentProfileReadAccess.
  */
 export async function requireTalentProfileAccess(profileId: string) {
   const user = await requireAuthenticatedUser();

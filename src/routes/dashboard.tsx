@@ -276,7 +276,7 @@ function DashboardPage() {
                     params={{ profileId: profile.id }}
                     className="mt-3 inline-block text-xs uppercase tracking-widest text-gold underline-offset-4 hover:underline"
                   >
-                    Edit profile
+                    {profile.canEdit ? "Edit profile" : "View profile"}
                   </Link>
                 </article>
               ))}

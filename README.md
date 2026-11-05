@@ -106,7 +106,7 @@ A separate Express API server is not part of the current architecture. Backend o
 - Admins can create unclaimed talent records for actors who have not registered; these records are not linked to a login account.
 - Admins can manage profile lifecycle status (`ACTIVE`, `INACTIVE`, `ARCHIVED`); archived records are hidden from the default active directory but can be restored.
 - Account-linked profiles are archived rather than permanently deleted. The full profile editor remains available from each directory row.
-- Guardian accounts can be created with a first child artist profile; one verified guardian account can create and manage multiple child profiles.
+- Guardian accounts can be created with a first child artist profile; one guardian account can create and manage multiple child profiles.
 - Child registration requires a date of birth under 18, a declared relationship, and an explicit guardian authorization confirmation. The confirmation timestamp is retained with the child profile.
 - Database ownership constraints permit an unclaimed record, a talent-owned record, or a guardian-managed record, while preventing a profile from being linked to both an owner and a guardian.
 - Protected profile-detail and profile-update server functions check access to the requested profile before returning or changing data.

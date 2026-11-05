@@ -4,7 +4,7 @@ A web platform for **Ankush Arya Casting**, a casting agency working with actors
 
 The project combines the agency's public website with a private talent-management platform. The first product release focuses on verified talent accounts, private profiles, and secure agency access.
 
-> **Project status:** Active development. Adult actor registration, email verification, login, database-backed sessions, and the initial role/ownership authorization layer have been implemented and tested locally. Expanded talent-profile editing and the Admin-only talent directory are implemented on a feature branch. The profile migration, TypeScript check, and production build have passed locally; interactive profile-save verification and first-admin provisioning remain pending. Guardian/child workflows, manager consent, and production hardening are still in progress.
+> **Project status:** Active development. Adult actor registration, email verification, login, database-backed sessions, the Admin-only directory, talent-profile editing, and private ImageKit photo upload/deletion have been implemented and tested locally. Guardian-led child registration and additional child-profile creation have been added to the feature branch; the new migration, type-check, build, and end-to-end guardian flow still require local verification. Independent verification of legal-guardian authority, manager consent, automated tests, and production hardening remain planned.
 
 ---
 
@@ -106,11 +106,13 @@ A separate Express API server is not part of the current architecture. Backend o
 - Admins can create unclaimed talent records for actors who have not registered; these records are not linked to a login account.
 - Admins can manage profile lifecycle status (`ACTIVE`, `INACTIVE`, `ARCHIVED`); archived records are hidden from the default active directory but can be restored.
 - Account-linked profiles are archived rather than permanently deleted. The full profile editor remains available from each directory row.
+- Guardian accounts can be created with a first child artist profile; one verified guardian account can create and manage multiple child profiles.
+- Child registration requires a date of birth under 18, a declared relationship, and an explicit guardian authorization confirmation. The confirmation timestamp is retained with the child profile.
 - Database ownership constraints permit an unclaimed record, a talent-owned record, or a guardian-managed record, while preventing a profile from being linked to both an owner and a guardian.
 - Protected profile-detail and profile-update server functions check access to the requested profile before returning or changing data.
 - The profile editor supports personal information, languages, experience, previous-work and portfolio links, Instagram, YouTube introduction-video URLs, and profile-photo uploads to private ImageKit storage. The application stores ImageKit file IDs and paths in PostgreSQL and serves photos through short-lived signed URLs. Ownership and guardian relationship fields cannot be changed through this form.
 
-**Authorization limitations:** Manager access is deliberately not granted until the actor-approved, revocable manager-access relationship is implemented. No public registration flow can assign the ADMIN role. The first agency administrator is provisioned manually by a database owner using `prisma/bootstrap-admin.sql`. Route guards improve navigation but are not a substitute for authorization inside every private server operation.
+**Authorization limitations:** Guardian registration currently records a self-declaration and consent timestamp; it does not independently verify legal-guardian identity or custody authority. The agency must verify that relationship before production use with child profiles. Manager access is deliberately not granted until the actor-approved, revocable manager-access relationship is implemented. No public registration flow can assign the ADMIN role. The first agency administrator is provisioned manually by a database owner using `prisma/bootstrap-admin.sql`. Route guards improve navigation but are not a substitute for authorization inside every private server operation.
 
 ## Authorization model
 
@@ -208,10 +210,10 @@ Important files:
 | `/` | Homepage |
 | `/about` | Agency information |
 | `/talent` | Private talent information |
-| `/join` | Adult actor registration and verification resend |
+| `/join` | Adult actor or parent/legal-guardian registration, plus verification resend |
 | `/verify-email` | Email verification |
 | `/login` | Login |
-| `/dashboard` | Authenticated account dashboard |
+| `/dashboard` | Authenticated account dashboard; guardians can add additional child artist profiles |
 | `/dashboard/profile/$profileId` | Protected talent profile editor with profile-photo upload and YouTube intro URL |
 | `/admin/talents` | Admin-only talent directory with search, filters, pagination, lifecycle status controls, and manual profile creation |
 | `/work` | Agency work |
@@ -368,12 +370,12 @@ The first version focuses on a private talent database and basic agency administ
 | 4 | Login, sessions, and logout | Implemented and tested locally |
 | 5 | Role and profile-ownership authorization foundation | Implemented on feature branch; local validation pending |
 | 6 | Initial admin provisioning | Bootstrap SQL script implemented; local execution pending |
-| 7 | Guardian and child artist registration | Planned |
+| 7 | Guardian and child artist registration, under-18 validation, and multiple child profiles per guardian | Implemented on feature branch; migration and local flow verification pending |
 | 8 | Actor-approved manager access and revocation | Planned |
-| 9 | Talent profile management | Expanded editor implemented; migration, TypeScript check, and production build passed locally; interactive save verification pending |
-| 10 | Admin talent management | Directory, server-side search/filters, pagination, manual creation, profile status management, and reversible archiving implemented; local migration/build verification pending |
-| 11 | Private profile-photo storage with ImageKit and YouTube intro links | Implemented on feature branch; local migration, SDK install, and upload testing pending |
-| 12 | Further security hardening, automated tests, and deployment | Planned |
+| 9 | Talent profile management | Implemented and tested locally, including profile editing and private photo management |
+| 10 | Admin talent management | Directory, server-side search/filters, pagination, manual creation, profile editing, status management, and reversible archiving implemented |
+| 11 | Private profile-photo storage with ImageKit and YouTube intro links | Implemented and tested locally; photos upload, persist after refresh, and can be deleted |
+| 12 | Independent guardian verification, manager consent, further security hardening, automated tests, and deployment | Planned |
 
 ## Git workflow
 

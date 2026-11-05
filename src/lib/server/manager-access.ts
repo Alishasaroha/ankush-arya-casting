@@ -43,39 +43,27 @@ export async function grantManagerAccess(input: GrantManagerAccessInput) {
     );
   }
 
-  const existingGrant = await prisma.managerAccessGrant.findUnique({
+  const existingGrant = await prisma.managerAccessGrant.findFirst({
     where: {
-      talentProfileId_managerUserId: {
-        talentProfileId: profile.id,
-        managerUserId: manager.id,
-      },
+      talentProfileId: profile.id,
+      managerUserId: manager.id,
+      revokedAt: null,
     },
-    select: { revokedAt: true },
+    select: { id: true },
   });
 
-  if (existingGrant && existingGrant.revokedAt === null) {
+  if (existingGrant) {
     throw new ManagerAccessRequestError(
       "This manager already has access to the profile.",
       "ALREADY_GRANTED",
     );
   }
 
-  const grant = await prisma.managerAccessGrant.upsert({
-    where: {
-      talentProfileId_managerUserId: {
-        talentProfileId: profile.id,
-        managerUserId: manager.id,
-      },
-    },
-    create: {
+  const grant = await prisma.managerAccessGrant.create({
+    data: {
       talentProfileId: profile.id,
       managerUserId: manager.id,
       grantedByUserId: user.userId,
-    },
-    update: {
-      grantedByUserId: user.userId,
-      grantedAt: new Date(),
-      revokedAt: null,
     },
     select: {
       id: true,
@@ -91,7 +79,7 @@ export async function grantManagerAccess(input: GrantManagerAccessInput) {
 }
 
 export async function revokeManagerAccess(input: RevokeManagerAccessInput) {
-  await requireTalentProfileGrantControl(input.profileId);
+  const { user } = await requireTalentProfileGrantControl(input.profileId);
 
   const result = await prisma.managerAccessGrant.updateMany({
     where: {
@@ -101,6 +89,7 @@ export async function revokeManagerAccess(input: RevokeManagerAccessInput) {
     },
     data: {
       revokedAt: new Date(),
+      revokedByUserId: user.userId,
     },
   });
 

@@ -307,8 +307,8 @@ export async function requireTalentProfileGrantControl(profileId: string) {
 
 /**
  * List only profiles the current user is allowed to see.
- * ADMIN can list all profiles. TALENT and GUARDIAN are scoped to
- * their own ownership/primary-guardian relationships.
+ * ADMIN can list all profiles. TALENT and GUARDIAN are scoped to their
+ * owned/assigned profiles; MANAGER is scoped to active consent grants.
  */
 export async function listAccessibleTalentProfiles() {
   const user = await requireAnyRole([

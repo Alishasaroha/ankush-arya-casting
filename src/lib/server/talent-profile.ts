@@ -7,6 +7,7 @@ const profileDetailsSelect = {
   id: true,
   fullName: true,
   dateOfBirth: true,
+  guardianRelationship: true,
   heightCm: true,
   gender: true,
   location: true,

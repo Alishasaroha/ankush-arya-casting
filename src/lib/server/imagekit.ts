@@ -51,6 +51,7 @@ export function getSignedTalentPhotoUrl(filePath: string): string {
     urlEndpoint: getImageKitUrlEndpoint(),
     src: normalizedPath,
     signed: true,
-    expiresIn: 60 * 60,
+    // Keep previously issued private-photo links short-lived so revoked access decays quickly.
+    expiresIn: 5 * 60,
   });
 }

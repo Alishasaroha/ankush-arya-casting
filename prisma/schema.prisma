@@ -1,6 +1,7 @@
 generator client {
   provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  output          = "../src/generated/prisma"
+  previewFeatures = ["partialIndexes"]
 }
 
 datasource db {
@@ -164,6 +165,7 @@ model ManagerAccessGrant {
   revokedByUser User?           @relation("ManagerAccessRevoker", fields: [revokedByUserId], references: [id], onDelete: SetNull)
 
   @@index([talentProfileId, managerUserId, revokedAt])
+  @@unique([talentProfileId, managerUserId], where: { revokedAt: null }, map: "ManagerAccessGrant_one_active_per_manager_profile_key")
   @@index([managerUserId, revokedAt])
   @@index([talentProfileId, revokedAt])
 }

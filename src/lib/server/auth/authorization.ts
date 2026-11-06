@@ -5,6 +5,7 @@ import {
   canManageTalentProfileManagerGrants,
   resolveTalentProfileAccess,
 } from "./authorization-policy";
+import { buildAccessibleTalentProfileWhere } from "./authorization-queries";
 
 export const APP_ROLES = {
   TALENT: "TALENT",
@@ -282,26 +283,11 @@ export async function listAccessibleTalentProfiles() {
     APP_ROLES.ADMIN,
   ]);
 
-  const isAdmin = user.roles.includes(APP_ROLES.ADMIN);
-
-  const ownershipFilters = [
-    ...(user.roles.includes(APP_ROLES.TALENT)
-      ? [{ ownerUserId: user.userId }]
-      : []),
-    ...(user.roles.includes(APP_ROLES.GUARDIAN)
-      ? [{ primaryGuardianUserId: user.userId }]
-      : []),
-    ...(user.roles.includes(APP_ROLES.MANAGER)
-      ? [{
-          managerAccessGrants: {
-            some: { managerUserId: user.userId, revokedAt: null },
-          },
-        }]
-      : []),
-  ];
-
   return prisma.talentProfile.findMany({
-    where: isAdmin ? {} : { OR: ownershipFilters },
+    where: buildAccessibleTalentProfileWhere({
+      userId: user.userId,
+      roles: user.roles,
+    }),
     select: {
       id: true,
       fullName: true,

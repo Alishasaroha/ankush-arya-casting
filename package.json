@@ -10,6 +10,8 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "test:auth": "node --test tests/authorization-policy.test.mjs",
+    "test:integration:auth": "node --test tests/authorization-database.integration.mjs",
+    "test:all": "npm run test:auth && npm run test:integration:auth",
     "format": "prettier --write ."
   },
   "dependencies": {

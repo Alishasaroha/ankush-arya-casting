@@ -1,6 +1,10 @@
 import { prisma } from "../prisma";
 import { getSessionCookie, clearSessionCookie } from "./session-cookie";
 import { getSessionUser, revokeSession } from "./session";
+import {
+  canManageTalentProfileManagerGrants,
+  resolveTalentProfileAccess,
+} from "./authorization-policy";
 
 export const APP_ROLES = {
   TALENT: "TALENT",
@@ -142,19 +146,12 @@ export async function requireTalentProfileAccess(profileId: string) {
     throw new TalentProfileNotFoundError();
   }
 
-  if (user.roles.includes(APP_ROLES.ADMIN)) {
-    return profile;
-  }
+  const access = resolveTalentProfileAccess(
+    { userId: user.userId, roles: user.roles },
+    profile,
+  );
 
-  const isOwner =
-    user.roles.includes(APP_ROLES.TALENT) &&
-    profile.ownerUserId === user.userId;
-
-  const isPrimaryGuardian =
-    user.roles.includes(APP_ROLES.GUARDIAN) &&
-    profile.primaryGuardianUserId === user.userId;
-
-  if (!isOwner && !isPrimaryGuardian) {
+  if (!access?.canEdit) {
     throw new AuthorizationError();
   }
 
@@ -227,49 +224,20 @@ export async function requireTalentProfileReadAccess(profileId: string) {
     throw new TalentProfileNotFoundError();
   }
 
-  const isAdmin = user.roles.includes(APP_ROLES.ADMIN);
-  const isOwner =
-    user.roles.includes(APP_ROLES.TALENT) &&
-    profile.ownerUserId === user.userId;
-  const isPrimaryGuardian =
-    user.roles.includes(APP_ROLES.GUARDIAN) &&
-    profile.primaryGuardianUserId === user.userId;
-  const canManageManagerAccess = isOwner || isPrimaryGuardian;
+  const hasActiveManagerGrant = profile.managerAccessGrants.some(
+    (grant) => grant.managerUserId === user.userId,
+  );
+  const access = resolveTalentProfileAccess(
+    { userId: user.userId, roles: user.roles },
+    profile,
+    hasActiveManagerGrant,
+  );
 
-  if (isAdmin || canManageManagerAccess) {
-    return {
-      profile,
-      access: {
-        canEdit: true,
-        canManageManagerAccess,
-        isManagerView: false,
-      },
-    };
+  if (!access) {
+    throw new AuthorizationError();
   }
 
-  if (user.roles.includes(APP_ROLES.MANAGER)) {
-    const activeGrant = await prisma.managerAccessGrant.findFirst({
-      where: {
-        talentProfileId: profileId,
-        managerUserId: user.userId,
-        revokedAt: null,
-      },
-      select: { id: true },
-    });
-
-    if (activeGrant) {
-      return {
-        profile,
-        access: {
-          canEdit: false,
-          canManageManagerAccess: false,
-          isManagerView: true,
-        },
-      };
-    }
-  }
-
-  throw new AuthorizationError();
+  return { profile, access };
 }
 
 /**
@@ -291,14 +259,10 @@ export async function requireTalentProfileGrantControl(profileId: string) {
     throw new TalentProfileNotFoundError();
   }
 
-  const isOwner =
-    user.roles.includes(APP_ROLES.TALENT) &&
-    profile.ownerUserId === user.userId;
-  const isPrimaryGuardian =
-    user.roles.includes(APP_ROLES.GUARDIAN) &&
-    profile.primaryGuardianUserId === user.userId;
-
-  if (!isOwner && !isPrimaryGuardian) {
+  if (!canManageTalentProfileManagerGrants(
+    { userId: user.userId, roles: user.roles },
+    profile,
+  )) {
     throw new AuthorizationError();
   }
 
@@ -354,9 +318,10 @@ export async function listAccessibleTalentProfiles() {
     profiles.map(({ ownerUserId, primaryGuardianUserId, ...profile }) => ({
       ...profile,
       canEdit:
-        isAdmin ||
-        ownerUserId === user.userId ||
-        primaryGuardianUserId === user.userId,
+        resolveTalentProfileAccess(
+          { userId: user.userId, roles: user.roles },
+          { ownerUserId, primaryGuardianUserId },
+        )?.canEdit ?? false,
     })),
   );
 }

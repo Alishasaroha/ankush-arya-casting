@@ -10,6 +10,7 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "test:auth": "node --test tests/authorization-policy.test.mjs",
+    "db:migrate:test": "prisma migrate deploy --config prisma-test.config.ts",
     "test:integration:auth": "node --test tests/authorization-database.integration.mjs",
     "test:all": "npm run test:auth && npm run test:integration:auth",
     "format": "prettier --write ."

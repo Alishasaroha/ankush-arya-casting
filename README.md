@@ -104,6 +104,9 @@ A separate Express API server is not part of the current architecture. Backend o
 - Pure policy tests cover agency admins, talent owners, assigned guardians, unassigned users, and consent-based managers.
 - Tests verify that managers remain read-only, revoked grants are denied, and only owners/assigned guardians can grant or revoke manager access.
 - Run with `npm run test:auth`; the tests use Node's built-in test runner and do not require a database or external account fixtures.
+- PostgreSQL integration tests exercise the same shared dashboard visibility query used by the application, including owner/guardian scoping, active manager grants, revoked grants, and persisted revocation metadata.
+- Run database integration coverage with `npm run test:integration:auth`. It requires a separate PostgreSQL database configured as `TEST_DATABASE_URL`; the database name must contain `test`, and the runner rejects the configured `DATABASE_URL` if it points to the same database.
+- Apply migrations to the isolated test database before running integration tests. The test runner creates uniquely named fixtures and removes only those fixtures afterward.
 
 ### Authorization foundation
 
@@ -387,6 +390,37 @@ The first version focuses on a private talent database and basic agency administ
 | 10 | Admin talent management | Directory, server-side search/filters, pagination, manual creation, profile editing, status management, and reversible archiving implemented |
 | 11 | Private profile-photo storage with ImageKit and YouTube intro links | Implemented and tested locally; photos upload, persist after refresh, and can be deleted |
 | 12 | Independent guardian verification, further security hardening, automated tests, and deployment | Planned |
+
+## Automated test commands
+
+Policy-only tests do not connect to PostgreSQL:
+
+```powershell
+npm run test:auth
+```
+
+Database integration tests require a dedicated database such as `ankush_arya_casting_test`. Set `TEST_DATABASE_URL` in your local `.env` file, keeping it separate from `DATABASE_URL`.
+
+Apply all migrations to the test database (PowerShell):
+
+```powershell
+$previousDatabaseUrl = $env:DATABASE_URL
+$env:DATABASE_URL = $env:TEST_DATABASE_URL
+npx prisma migrate deploy
+if ($LASTEXITCODE -ne 0) {
+    $env:DATABASE_URL = $previousDatabaseUrl
+    throw "Test database migrations failed."
+}
+$env:DATABASE_URL = $previousDatabaseUrl
+```
+
+Then run:
+
+```powershell
+npm run test:integration:auth
+```
+
+The integration test runner refuses to start unless the database name contains `test`, and also refuses to use the same host, port, and database name as `DATABASE_URL`. It creates uniquely named fixture accounts and profiles, then deletes only the fixtures it created.
 
 ## Git workflow
 

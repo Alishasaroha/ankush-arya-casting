@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import {
   canManageTalentProfileManagerGrants,
   resolveTalentProfileAccess,
-} from "../src/lib/server/auth/authorization.ts";
+} from "../src/lib/server/auth/authorization-policy.ts";
 
 const profile = {
   ownerUserId: "talent-1",

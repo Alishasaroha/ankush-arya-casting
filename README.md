@@ -401,17 +401,10 @@ npm run test:auth
 
 Database integration tests require a dedicated database such as `ankush_arya_casting_test`. Set `TEST_DATABASE_URL` in your local `.env` file, keeping it separate from `DATABASE_URL`.
 
-Apply all migrations to the test database (PowerShell):
+Apply all migrations to the isolated test database using the separate Prisma config:
 
 ```powershell
-$previousDatabaseUrl = $env:DATABASE_URL
-$env:DATABASE_URL = $env:TEST_DATABASE_URL
-npx prisma migrate deploy
-if ($LASTEXITCODE -ne 0) {
-    $env:DATABASE_URL = $previousDatabaseUrl
-    throw "Test database migrations failed."
-}
-$env:DATABASE_URL = $previousDatabaseUrl
+npm run db:migrate:test
 ```
 
 Then run:

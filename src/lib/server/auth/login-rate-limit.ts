@@ -63,11 +63,16 @@ export async function consumeLoginAttempt(email: string): Promise<void> {
   requestsSinceCleanup += 1;
   if (requestsSinceCleanup >= 100) {
     requestsSinceCleanup = 0;
-    await prisma.loginAttempt.deleteMany({
-      where: {
-        windowStartedAt: { lt: windowFloor },
-      },
-    });
+    try {
+      await prisma.loginAttempt.deleteMany({
+        where: {
+          windowStartedAt: { lt: windowFloor },
+        },
+      });
+    } catch (cleanupError) {
+      // Expired-bucket cleanup must never block a valid login attempt.
+      console.warn("Login rate-limit cleanup failed:", cleanupError);
+    }
   }
 }
 

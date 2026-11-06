@@ -59,23 +59,38 @@ export async function grantManagerAccess(input: GrantManagerAccessInput) {
     );
   }
 
-  const grant = await prisma.managerAccessGrant.create({
-    data: {
-      talentProfileId: profile.id,
-      managerUserId: manager.id,
-      grantedByUserId: user.userId,
-    },
-    select: {
-      id: true,
-      managerUserId: true,
-      grantedAt: true,
-      managerUser: {
-        select: { email: true, fullName: true },
+  try {
+    return await prisma.managerAccessGrant.create({
+      data: {
+        talentProfileId: profile.id,
+        managerUserId: manager.id,
+        grantedByUserId: user.userId,
       },
-    },
-  });
+      select: {
+        id: true,
+        managerUserId: true,
+        grantedAt: true,
+        managerUser: {
+          select: { email: true, fullName: true },
+        },
+      },
+    });
+  } catch (error) {
+    // The partial unique index is the final protection against concurrent grants.
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      "code" in error &&
+      error.code === "P2002"
+    ) {
+      throw new ManagerAccessRequestError(
+        "This manager already has access to the profile.",
+        "ALREADY_GRANTED",
+      );
+    }
 
-  return grant;
+    throw error;
+  }
 }
 
 export async function revokeManagerAccess(input: RevokeManagerAccessInput) {

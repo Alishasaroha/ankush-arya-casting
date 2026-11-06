@@ -1,5 +1,6 @@
 import { prisma } from "../prisma";
-import { verifyPassword } from "./password";
+import { verifyPassword, getDummyPasswordHash } from "./password";
+import { consumeLoginAttempt, clearLoginAttempts } from "./login-rate-limit";
 
 export class InvalidCredentialsError extends Error {
   constructor() {
@@ -15,12 +16,20 @@ export class EmailNotVerifiedError extends Error {
   }
 }
 
+export { LoginRateLimitError } from "./login-rate-limit";
+
 export async function authenticateUser(
   email: string,
-  password: string
+  password: string,
 ) {
+  const normalizedEmail = email.trim().toLowerCase();
+
+  // Count requests before looking up the account so unknown addresses are
+  // throttled just like existing accounts.
+  await consumeLoginAttempt(normalizedEmail);
+
   const user = await prisma.user.findUnique({
-    where: { email: email.trim().toLowerCase() },
+    where: { email: normalizedEmail },
     select: {
       id: true,
       email: true,
@@ -29,18 +38,18 @@ export async function authenticateUser(
     },
   });
 
-  if (!user) {
+  // Always perform the same Argon2id verification work, even when the
+  // account does not exist, to reduce timing-based account enumeration.
+  const hashToVerify = user?.passwordHash ?? await getDummyPasswordHash();
+  const passwordMatches = await verifyPassword(password, hashToVerify);
+
+  if (!user || !passwordMatches) {
     throw new InvalidCredentialsError();
   }
 
-  const passwordMatches = await verifyPassword(
-    password,
-    user.passwordHash
-  );
-
-  if (!passwordMatches) {
-    throw new InvalidCredentialsError();
-  }
+  // A correct password is not a failed login, even if email verification
+  // is still pending.
+  await clearLoginAttempts(normalizedEmail);
 
   if (!user.emailVerifiedAt) {
     throw new EmailNotVerifiedError();

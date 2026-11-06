@@ -94,6 +94,10 @@ A separate Express API server is not part of the current architecture. Backend o
 - Only SHA-256 session-token hashes are stored in PostgreSQL.
 - Current-user lookup validates the session and verified-email status.
 - Logout revokes the database session and clears the cookie.
+- Login performs an Argon2id dummy verification for unknown email addresses to reduce timing-based account enumeration.
+- Login attempts are limited to 10 per normalized email address in a 15-minute window using an atomic PostgreSQL counter; only a SHA-256 email identifier is stored.
+- Successful credential checks clear the failed-attempt counter.
+- A successful login revokes the current browser's previous session before issuing a fresh session.
 
 ### Authorization foundation
 
@@ -315,7 +319,7 @@ IMAGEKIT_URL_ENDPOINT="https://ik.imagekit.io/your_imagekit_id"
 - `IMAGEKIT_PRIVATE_KEY` — ImageKit server secret used by the Node.js SDK. Never expose it to browser code or commit it.
 - `IMAGEKIT_URL_ENDPOINT` — HTTPS ImageKit delivery endpoint used to generate signed private-photo URLs.
 
-Profile photos are uploaded through same-origin, authenticated server routes. The server checks profile access, accepts JPG/PNG/WebP images up to 5 MB each, marks ImageKit assets private, and limits each profile to 30 photos. PostgreSQL stores the ImageKit file ID and file path; photo responses contain signed URLs that expire after fifteen minutes. The introduction-video field accepts YouTube video URLs only; video files are not uploaded or stored.
+Login throttling is currently per normalized email address. Add a trusted edge/IP-based rate limit for login, registration, and verification-email requests after selecting the production hosting platform; do not trust arbitrary forwarded-IP headers from an unconfigured proxy.\n\nProfile photos are uploaded through same-origin, authenticated server routes. The server checks profile access, accepts JPG/PNG/WebP images up to 5 MB each, marks ImageKit assets private, and limits each profile to 30 photos. PostgreSQL stores the ImageKit file ID and file path; photo responses contain signed URLs that expire after fifteen minutes. The introduction-video field accepts YouTube video URLs only; video files are not uploaded or stored.
 
 Gmail SMTP is being used for initial development and low-volume verification messages. Keep the Google App Password private and never commit it. For higher-volume production delivery, move to a transactional email provider with an authenticated agency-owned domain.
 

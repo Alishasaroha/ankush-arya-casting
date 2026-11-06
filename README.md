@@ -99,6 +99,12 @@ A separate Express API server is not part of the current architecture. Backend o
 - Successful credential checks clear the failed-attempt counter.
 - A successful login revokes the current browser's previous session before issuing a fresh session.
 
+### Automated authorization tests
+
+- Pure policy tests cover agency admins, talent owners, assigned guardians, unassigned users, and consent-based managers.
+- Tests verify that managers remain read-only, revoked grants are denied, and only owners/assigned guardians can grant or revoke manager access.
+- Run with `npm run test:auth`; the tests use Node's built-in test runner and do not require a database or external account fixtures.
+
 ### Authorization foundation
 
 - Multiple roles per user through the `Role` and `UserRole` tables.

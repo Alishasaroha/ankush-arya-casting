@@ -216,6 +216,17 @@ test("PostgreSQL manager relation returns only actively granted profiles", async
   assert.deepEqual(revokedManagerProfiles, []);
   assert.deepEqual(noGrantManagerProfiles, []);
 
+  await assert.rejects(
+    prisma.managerAccessGrant.create({
+      data: {
+        talentProfileId: fixture.ownedProfile.id,
+        managerUserId: fixture.managerActive.id,
+        grantedByUserId: fixture.owner.id,
+      },
+    }),
+    (error) => error && typeof error === "object" && "code" in error && error.code === "P2002",
+  );
+
   const access = resolveTalentProfileAccess(
     { userId: fixture.managerActive.id, roles: ["MANAGER"] },
     fixture.ownedProfile,
@@ -275,6 +286,33 @@ test("PostgreSQL grant creation exposes a profile and revocation removes it", as
     roles: ["MANAGER"],
   });
   assert.deepEqual(afterRevoke, []);
+
+  // Revocation retains the old row; a later consent creates a new grant row.
+  const renewedGrant = await prisma.managerAccessGrant.create({
+    data: {
+      talentProfileId: fixture.ownedProfile.id,
+      managerUserId: fixture.managerNoGrant.id,
+      grantedByUserId: fixture.owner.id,
+    },
+    select: { id: true, revokedAt: true },
+  });
+
+  assert.notEqual(renewedGrant.id, grant.id);
+  assert.equal(renewedGrant.revokedAt, null);
+
+  const grantHistory = await prisma.managerAccessGrant.findMany({
+    where: {
+      talentProfileId: fixture.ownedProfile.id,
+      managerUserId: fixture.managerNoGrant.id,
+    },
+    orderBy: { grantedAt: "asc" },
+    select: { id: true, revokedAt: true, revokedByUserId: true },
+  });
+
+  assert.equal(grantHistory.length, 2);
+  assert.ok(grantHistory[0]?.revokedAt instanceof Date);
+  assert.equal(grantHistory[0]?.revokedByUserId, fixture.owner.id);
+  assert.equal(grantHistory[1]?.revokedAt, null);
 });
 
 test("a manager can read photo metadata through an active grant but remains non-editable", async () => {

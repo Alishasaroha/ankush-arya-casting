@@ -15,11 +15,6 @@ CREATE TABLE "ManagerAccessGrant" (
 CREATE INDEX "ManagerAccessGrant_talentProfileId_managerUserId_revokedAt_idx"
   ON "ManagerAccessGrant"("talentProfileId", "managerUserId", "revokedAt");
 
--- Keep grant history while preventing concurrent duplicate active permissions.
-CREATE UNIQUE INDEX "ManagerAccessGrant_one_active_per_manager_profile_key"
-  ON "ManagerAccessGrant"("talentProfileId", "managerUserId")
-  WHERE "revokedAt" IS NULL;
-
 CREATE INDEX "ManagerAccessGrant_managerUserId_revokedAt_idx"
   ON "ManagerAccessGrant"("managerUserId", "revokedAt");
 

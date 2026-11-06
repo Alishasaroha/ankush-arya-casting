@@ -5,6 +5,7 @@ import {
   authenticateUser,
   InvalidCredentialsError,
   EmailNotVerifiedError,
+  LoginRateLimitError,
 } from "./server/auth/login";
 import {
   getAuthenticatedUser,
@@ -303,6 +304,13 @@ export const loginFn = createServerFn({
   .handler(async ({ data }) => {
     try {
       const user = await authenticateUser(data.email, data.password);
+
+      // Rotate this browser's existing session when credentials are accepted.
+      const previousSessionToken = getSessionCookie();
+      if (previousSessionToken) {
+        await revokeSession(previousSessionToken);
+      }
+
       const session = await createSession(user.id);
 
       setSessionCookie(session.token);
@@ -324,6 +332,14 @@ export const loginFn = createServerFn({
         return {
           success: false as const,
           code: "EMAIL_NOT_VERIFIED" as const,
+          message: error.message,
+        };
+      }
+
+      if (error instanceof LoginRateLimitError) {
+        return {
+          success: false as const,
+          code: "RATE_LIMITED" as const,
           message: error.message,
         };
       }

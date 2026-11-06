@@ -198,6 +198,17 @@ test("PostgreSQL ownership and guardian relations scope account profile lists", 
   assert.deepEqual(unrelatedProfiles, []);
 });
 
+test("PostgreSQL admin visibility is agency-wide", async () => {
+  const adminProfiles = await listFor({
+    userId: fixture.admin.id,
+    roles: ["ADMIN"],
+  });
+
+  const ids = new Set(adminProfiles.map((item) => item.id));
+  assert.equal(ids.has(fixture.ownedProfile.id), true);
+  assert.equal(ids.has(fixture.childProfile.id), true);
+});
+
 test("PostgreSQL manager relation returns only actively granted profiles", async () => {
   const activeManagerProfiles = await listFor({
     userId: fixture.managerActive.id,

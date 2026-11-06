@@ -23,7 +23,7 @@ if (process.env["DATABASE_URL"]) {
   const developmentUrl = new URL(process.env["DATABASE_URL"]);
   const sameDatabase =
     developmentUrl.hostname === testUrl.hostname &&
-    developmentUrl.port === testUrl.port &&
+    (developmentUrl.port || "5432") === (testUrl.port || "5432") &&
     decodeURIComponent(developmentUrl.pathname) === decodeURIComponent(testUrl.pathname);
 
   if (sameDatabase) {

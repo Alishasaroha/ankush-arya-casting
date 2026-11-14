@@ -44,12 +44,17 @@ const profileDetailsSelect = {
 export async function getTalentProfile(profileId: string) {
   const { profile, access } = await requireTalentProfileReadAccess(profileId);
 
-  const {
-    ownerUserId: _ownerUserId,
-    primaryGuardianUserId: _primaryGuardianUserId,
-    managerAccessGrants,
-    ...safeProfile
-  } = profile;
+const {
+  ownerUserId,
+  primaryGuardianUserId,
+  managerAccessGrants,
+  ...safeProfile
+} = profile;
+
+// These relationship identifiers are intentionally excluded
+// from the profile response.
+void ownerUserId;
+void primaryGuardianUserId;
 
   return {
     ...safeProfile,

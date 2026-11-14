@@ -20,6 +20,10 @@ import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminTalentsRouteImport } from './routes/admin.talents'
+import { Route as DashboardProfileProfileIdRouteImport } from './routes/dashboard.profile.$profileId'
+import { Route as ApiTalentProfilesProfileIdPhotosRouteImport } from './routes/api.talent-profiles.$profileId.photos'
+import { Route as ApiTalentProfilesProfileIdPhotosPhotoIdRouteImport } from './routes/api.talent-profiles.$profileId.photos.$photoId'
 
 const WorkRoute = WorkRouteImport.update({
   id: '/work',
@@ -76,12 +80,35 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminTalentsRoute = AdminTalentsRouteImport.update({
+  id: '/admin/talents',
+  path: '/admin/talents',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardProfileProfileIdRoute =
+  DashboardProfileProfileIdRouteImport.update({
+    id: '/profile/$profileId',
+    path: '/profile/$profileId',
+    getParentRoute: () => DashboardRoute,
+  } as any)
+const ApiTalentProfilesProfileIdPhotosRoute =
+  ApiTalentProfilesProfileIdPhotosRouteImport.update({
+    id: '/api/talent-profiles/$profileId/photos',
+    path: '/api/talent-profiles/$profileId/photos',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiTalentProfilesProfileIdPhotosPhotoIdRoute =
+  ApiTalentProfilesProfileIdPhotosPhotoIdRouteImport.update({
+    id: '/$photoId',
+    path: '/$photoId',
+    getParentRoute: () => ApiTalentProfilesProfileIdPhotosRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/contact': typeof ContactRoute
-  '/dashboard': typeof DashboardRoute
+  '/dashboard': typeof DashboardRouteWithChildren
   '/join': typeof JoinRoute
   '/login': typeof LoginRoute
   '/producers': typeof ProducersRoute
@@ -89,12 +116,16 @@ export interface FileRoutesByFullPath {
   '/talent': typeof TalentRoute
   '/verify-email': typeof VerifyEmailRoute
   '/work': typeof WorkRoute
+  '/admin/talents': typeof AdminTalentsRoute
+  '/dashboard/profile/$profileId': typeof DashboardProfileProfileIdRoute
+  '/api/talent-profiles/$profileId/photos': typeof ApiTalentProfilesProfileIdPhotosRouteWithChildren
+  '/api/talent-profiles/$profileId/photos/$photoId': typeof ApiTalentProfilesProfileIdPhotosPhotoIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/contact': typeof ContactRoute
-  '/dashboard': typeof DashboardRoute
+  '/dashboard': typeof DashboardRouteWithChildren
   '/join': typeof JoinRoute
   '/login': typeof LoginRoute
   '/producers': typeof ProducersRoute
@@ -102,13 +133,17 @@ export interface FileRoutesByTo {
   '/talent': typeof TalentRoute
   '/verify-email': typeof VerifyEmailRoute
   '/work': typeof WorkRoute
+  '/admin/talents': typeof AdminTalentsRoute
+  '/dashboard/profile/$profileId': typeof DashboardProfileProfileIdRoute
+  '/api/talent-profiles/$profileId/photos': typeof ApiTalentProfilesProfileIdPhotosRouteWithChildren
+  '/api/talent-profiles/$profileId/photos/$photoId': typeof ApiTalentProfilesProfileIdPhotosPhotoIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/contact': typeof ContactRoute
-  '/dashboard': typeof DashboardRoute
+  '/dashboard': typeof DashboardRouteWithChildren
   '/join': typeof JoinRoute
   '/login': typeof LoginRoute
   '/producers': typeof ProducersRoute
@@ -116,6 +151,10 @@ export interface FileRoutesById {
   '/talent': typeof TalentRoute
   '/verify-email': typeof VerifyEmailRoute
   '/work': typeof WorkRoute
+  '/admin/talents': typeof AdminTalentsRoute
+  '/dashboard/profile/$profileId': typeof DashboardProfileProfileIdRoute
+  '/api/talent-profiles/$profileId/photos': typeof ApiTalentProfilesProfileIdPhotosRouteWithChildren
+  '/api/talent-profiles/$profileId/photos/$photoId': typeof ApiTalentProfilesProfileIdPhotosPhotoIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -131,6 +170,10 @@ export interface FileRouteTypes {
     | '/talent'
     | '/verify-email'
     | '/work'
+    | '/admin/talents'
+    | '/dashboard/profile/$profileId'
+    | '/api/talent-profiles/$profileId/photos'
+    | '/api/talent-profiles/$profileId/photos/$photoId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -144,6 +187,10 @@ export interface FileRouteTypes {
     | '/talent'
     | '/verify-email'
     | '/work'
+    | '/admin/talents'
+    | '/dashboard/profile/$profileId'
+    | '/api/talent-profiles/$profileId/photos'
+    | '/api/talent-profiles/$profileId/photos/$photoId'
   id:
     | '__root__'
     | '/'
@@ -157,13 +204,17 @@ export interface FileRouteTypes {
     | '/talent'
     | '/verify-email'
     | '/work'
+    | '/admin/talents'
+    | '/dashboard/profile/$profileId'
+    | '/api/talent-profiles/$profileId/photos'
+    | '/api/talent-profiles/$profileId/photos/$photoId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
   ContactRoute: typeof ContactRoute
-  DashboardRoute: typeof DashboardRoute
+  DashboardRoute: typeof DashboardRouteWithChildren
   JoinRoute: typeof JoinRoute
   LoginRoute: typeof LoginRoute
   ProducersRoute: typeof ProducersRoute
@@ -171,6 +222,8 @@ export interface RootRouteChildren {
   TalentRoute: typeof TalentRoute
   VerifyEmailRoute: typeof VerifyEmailRoute
   WorkRoute: typeof WorkRoute
+  AdminTalentsRoute: typeof AdminTalentsRoute
+  ApiTalentProfilesProfileIdPhotosRoute: typeof ApiTalentProfilesProfileIdPhotosRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -252,14 +305,69 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/talents': {
+      id: '/admin/talents'
+      path: '/admin/talents'
+      fullPath: '/admin/talents'
+      preLoaderRoute: typeof AdminTalentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard/profile/$profileId': {
+      id: '/dashboard/profile/$profileId'
+      path: '/profile/$profileId'
+      fullPath: '/dashboard/profile/$profileId'
+      preLoaderRoute: typeof DashboardProfileProfileIdRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/api/talent-profiles/$profileId/photos': {
+      id: '/api/talent-profiles/$profileId/photos'
+      path: '/api/talent-profiles/$profileId/photos'
+      fullPath: '/api/talent-profiles/$profileId/photos'
+      preLoaderRoute: typeof ApiTalentProfilesProfileIdPhotosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/talent-profiles/$profileId/photos/$photoId': {
+      id: '/api/talent-profiles/$profileId/photos/$photoId'
+      path: '/$photoId'
+      fullPath: '/api/talent-profiles/$profileId/photos/$photoId'
+      preLoaderRoute: typeof ApiTalentProfilesProfileIdPhotosPhotoIdRouteImport
+      parentRoute: typeof ApiTalentProfilesProfileIdPhotosRoute
+    }
   }
 }
+
+interface DashboardRouteChildren {
+  DashboardProfileProfileIdRoute: typeof DashboardProfileProfileIdRoute
+}
+
+const DashboardRouteChildren: DashboardRouteChildren = {
+  DashboardProfileProfileIdRoute: DashboardProfileProfileIdRoute,
+}
+
+const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
+  DashboardRouteChildren,
+)
+
+interface ApiTalentProfilesProfileIdPhotosRouteChildren {
+  ApiTalentProfilesProfileIdPhotosPhotoIdRoute: typeof ApiTalentProfilesProfileIdPhotosPhotoIdRoute
+}
+
+const ApiTalentProfilesProfileIdPhotosRouteChildren: ApiTalentProfilesProfileIdPhotosRouteChildren =
+  {
+    ApiTalentProfilesProfileIdPhotosPhotoIdRoute:
+      ApiTalentProfilesProfileIdPhotosPhotoIdRoute,
+  }
+
+const ApiTalentProfilesProfileIdPhotosRouteWithChildren =
+  ApiTalentProfilesProfileIdPhotosRoute._addFileChildren(
+    ApiTalentProfilesProfileIdPhotosRouteChildren,
+  )
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
   ContactRoute: ContactRoute,
-  DashboardRoute: DashboardRoute,
+  DashboardRoute: DashboardRouteWithChildren,
   JoinRoute: JoinRoute,
   LoginRoute: LoginRoute,
   ProducersRoute: ProducersRoute,
@@ -267,6 +375,9 @@ const rootRouteChildren: RootRouteChildren = {
   TalentRoute: TalentRoute,
   VerifyEmailRoute: VerifyEmailRoute,
   WorkRoute: WorkRoute,
+  AdminTalentsRoute: AdminTalentsRoute,
+  ApiTalentProfilesProfileIdPhotosRoute:
+    ApiTalentProfilesProfileIdPhotosRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

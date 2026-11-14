@@ -144,6 +144,14 @@ await navigate({
               placeholder="Enter your password"
               className="mt-3 w-full bg-transparent border-b hairline py-3 text-base text-foreground focus:outline-none focus:border-gold"
             />
+            <div className="mt-3 text-right">
+              <Link
+                to="/forgot-password"
+                className="text-xs text-gold underline underline-offset-4"
+              >
+                Forgot password?
+              </Link>
+            </div>
           </div>
 
           {status !== "idle" && (

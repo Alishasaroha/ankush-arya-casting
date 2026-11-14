@@ -37,6 +37,7 @@ model User {
   managerAccessRevoked  ManagerAccessGrant[]     @relation("ManagerAccessRevoker")
   sessions               Session[]
   emailVerificationToken EmailVerificationToken?
+  passwordResetToken     PasswordResetToken?
 }
 
 model Role {
@@ -179,4 +180,17 @@ model LoginAttempt {
   updatedAt        DateTime @updatedAt
 
   @@index([windowStartedAt])
+}
+
+
+model PasswordResetToken {
+  id        String   @id @default(uuid()) @db.Uuid
+  tokenHash String   @unique @db.VarChar(64)
+  userId    String   @unique @db.Uuid
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([expiresAt])
 }

@@ -2,6 +2,11 @@ import { createServerFn } from "@tanstack/react-start";
 
 import { createResendVerificationRequest } from "./server/auth/resend-verification";
 import {
+  createPasswordResetRequest,
+  resetPasswordWithToken,
+} from "./server/auth/password-reset";
+import { sendPasswordResetEmail } from "./server/email/send-password-reset-email";
+import {
   authenticateUser,
   InvalidCredentialsError,
   EmailNotVerifiedError,
@@ -34,6 +39,8 @@ import {
   registerSchema,
   resendVerificationSchema,
   verifyEmailSchema,
+  passwordResetRequestSchema,
+  passwordResetSchema,
 } from "./validation/auth";
 import { registerGuardianSchema, guardianChildProfileSchema } from "./validation/guardian";
 import { managerRegistrationSchema, grantManagerAccessSchema, revokeManagerAccessSchema } from "./validation/manager";
@@ -293,6 +300,78 @@ export const resendVerificationFn = createServerFn({
       return {
         success: false as const,
         message: "Unable to process your request. Please try again later.",
+      };
+    }
+  });
+
+
+export const requestPasswordResetFn = createServerFn({
+  method: "POST",
+})
+  .validator(passwordResetRequestSchema)
+  .handler(async ({ data }) => {
+    try {
+      const request = await createPasswordResetRequest(data.email);
+
+      if (request) {
+        try {
+          await sendPasswordResetEmail({
+            to: request.email,
+            fullName: request.fullName,
+            token: request.token,
+          });
+        } catch (emailError) {
+          // Keep the public response identical so account existence and
+          // mail-delivery status are not exposed to unauthenticated callers.
+          console.error(
+            "Password reset email delivery failed:",
+            emailError instanceof Error ? emailError.message : "Unknown error",
+          );
+        }
+      }
+
+      return {
+        success: true as const,
+        message:
+          "If an account exists for this email, a password reset link will be sent shortly.",
+      };
+    } catch (error) {
+      console.error("Password reset request failed:", error);
+      return {
+        success: false as const,
+        message: "Unable to process your request. Please try again later.",
+      };
+    }
+  });
+
+export const resetPasswordFn = createServerFn({
+  method: "POST",
+})
+  .validator(passwordResetSchema)
+  .handler(async ({ data }) => {
+    try {
+      const reset = await resetPasswordWithToken(data.token, data.password);
+
+      if (!reset) {
+        return {
+          success: false as const,
+          message:
+            "This password reset link is invalid or has expired. Request a new link and try again.",
+        };
+      }
+
+      // resetPasswordWithToken revokes all sessions in the database.
+      clearSessionCookie();
+
+      return {
+        success: true as const,
+        message: "Your password has been reset. Please sign in with your new password.",
+      };
+    } catch (error) {
+      console.error("Password reset failed:", error);
+      return {
+        success: false as const,
+        message: "Unable to reset your password. Please request a new link and try again.",
       };
     }
   });

@@ -9,30 +9,24 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as ResetPasswordRouteImport } from './routes/reset-password'
-import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as WorkRouteImport } from './routes/work'
 import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as TalentRouteImport } from './routes/talent'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ProducersRouteImport } from './routes/producers'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as JoinRouteImport } from './routes/join'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminTalentsRouteImport } from './routes/admin.talents'
+import { Route as DashboardProfileProfileIdRouteImport } from './routes/dashboard.profile.$profileId'
+import { Route as ApiTalentProfilesProfileIdPhotosRouteImport } from './routes/api.talent-profiles.$profileId.photos'
+import { Route as ApiTalentProfilesProfileIdPhotosPhotoIdRouteImport } from './routes/api.talent-profiles.$profileId.photos.$photoId'
 
-const ResetPasswordRoute = ResetPasswordRouteImport.update({
-  id: '/reset-password',
-  path: '/reset-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
-  id: '/forgot-password',
-  path: '/forgot-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const WorkRoute = WorkRouteImport.update({
   id: '/work',
   path: '/work',
@@ -53,6 +47,11 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProducersRoute = ProducersRouteImport.update({
   id: '/producers',
   path: '/producers',
@@ -66,6 +65,11 @@ const LoginRoute = LoginRouteImport.update({
 const JoinRoute = JoinRouteImport.update({
   id: '/join',
   path: '/join',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardRoute = DashboardRouteImport.update({
@@ -88,52 +92,87 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminTalentsRoute = AdminTalentsRouteImport.update({
+  id: '/admin/talents',
+  path: '/admin/talents',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardProfileProfileIdRoute =
+  DashboardProfileProfileIdRouteImport.update({
+    id: '/profile/$profileId',
+    path: '/profile/$profileId',
+    getParentRoute: () => DashboardRoute,
+  } as any)
+const ApiTalentProfilesProfileIdPhotosRoute =
+  ApiTalentProfilesProfileIdPhotosRouteImport.update({
+    id: '/api/talent-profiles/$profileId/photos',
+    path: '/api/talent-profiles/$profileId/photos',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiTalentProfilesProfileIdPhotosPhotoIdRoute =
+  ApiTalentProfilesProfileIdPhotosPhotoIdRouteImport.update({
+    id: '/$photoId',
+    path: '/$photoId',
+    getParentRoute: () => ApiTalentProfilesProfileIdPhotosRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/contact': typeof ContactRoute
-  '/dashboard': typeof DashboardRoute
+  '/dashboard': typeof DashboardRouteWithChildren
+  '/forgot-password': typeof ForgotPasswordRoute
   '/join': typeof JoinRoute
   '/login': typeof LoginRoute
   '/producers': typeof ProducersRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/talent': typeof TalentRoute
   '/verify-email': typeof VerifyEmailRoute
   '/work': typeof WorkRoute
-  '/forgot-password': typeof ForgotPasswordRoute
-  '/reset-password': typeof ResetPasswordRoute
+  '/admin/talents': typeof AdminTalentsRoute
+  '/dashboard/profile/$profileId': typeof DashboardProfileProfileIdRoute
+  '/api/talent-profiles/$profileId/photos': typeof ApiTalentProfilesProfileIdPhotosRouteWithChildren
+  '/api/talent-profiles/$profileId/photos/$photoId': typeof ApiTalentProfilesProfileIdPhotosPhotoIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/contact': typeof ContactRoute
-  '/dashboard': typeof DashboardRoute
+  '/dashboard': typeof DashboardRouteWithChildren
+  '/forgot-password': typeof ForgotPasswordRoute
   '/join': typeof JoinRoute
   '/login': typeof LoginRoute
   '/producers': typeof ProducersRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/talent': typeof TalentRoute
   '/verify-email': typeof VerifyEmailRoute
   '/work': typeof WorkRoute
-  '/forgot-password': typeof ForgotPasswordRoute
-  '/reset-password': typeof ResetPasswordRoute
+  '/admin/talents': typeof AdminTalentsRoute
+  '/dashboard/profile/$profileId': typeof DashboardProfileProfileIdRoute
+  '/api/talent-profiles/$profileId/photos': typeof ApiTalentProfilesProfileIdPhotosRouteWithChildren
+  '/api/talent-profiles/$profileId/photos/$photoId': typeof ApiTalentProfilesProfileIdPhotosPhotoIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/contact': typeof ContactRoute
-  '/dashboard': typeof DashboardRoute
+  '/dashboard': typeof DashboardRouteWithChildren
+  '/forgot-password': typeof ForgotPasswordRoute
   '/join': typeof JoinRoute
   '/login': typeof LoginRoute
   '/producers': typeof ProducersRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/talent': typeof TalentRoute
   '/verify-email': typeof VerifyEmailRoute
   '/work': typeof WorkRoute
-  '/forgot-password': typeof ForgotPasswordRoute
-  '/reset-password': typeof ResetPasswordRoute
+  '/admin/talents': typeof AdminTalentsRoute
+  '/dashboard/profile/$profileId': typeof DashboardProfileProfileIdRoute
+  '/api/talent-profiles/$profileId/photos': typeof ApiTalentProfilesProfileIdPhotosRouteWithChildren
+  '/api/talent-profiles/$profileId/photos/$photoId': typeof ApiTalentProfilesProfileIdPhotosPhotoIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -142,15 +181,19 @@ export interface FileRouteTypes {
     | '/about'
     | '/contact'
     | '/dashboard'
+    | '/forgot-password'
     | '/join'
     | '/login'
     | '/producers'
+    | '/reset-password'
     | '/sitemap.xml'
     | '/talent'
     | '/verify-email'
     | '/work'
-    | '/forgot-password'
-    | '/reset-password'
+    | '/admin/talents'
+    | '/dashboard/profile/$profileId'
+    | '/api/talent-profiles/$profileId/photos'
+    | '/api/talent-profiles/$profileId/photos/$photoId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -166,6 +209,10 @@ export interface FileRouteTypes {
     | '/talent'
     | '/verify-email'
     | '/work'
+    | '/admin/talents'
+    | '/dashboard/profile/$profileId'
+    | '/api/talent-profiles/$profileId/photos'
+    | '/api/talent-profiles/$profileId/photos/$photoId'
   id:
     | '__root__'
     | '/'
@@ -181,22 +228,28 @@ export interface FileRouteTypes {
     | '/talent'
     | '/verify-email'
     | '/work'
+    | '/admin/talents'
+    | '/dashboard/profile/$profileId'
+    | '/api/talent-profiles/$profileId/photos'
+    | '/api/talent-profiles/$profileId/photos/$photoId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
   ContactRoute: typeof ContactRoute
-  DashboardRoute: typeof DashboardRoute
+  DashboardRoute: typeof DashboardRouteWithChildren
+  ForgotPasswordRoute: typeof ForgotPasswordRoute
   JoinRoute: typeof JoinRoute
   LoginRoute: typeof LoginRoute
   ProducersRoute: typeof ProducersRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TalentRoute: typeof TalentRoute
   VerifyEmailRoute: typeof VerifyEmailRoute
   WorkRoute: typeof WorkRoute
-  ForgotPasswordRoute: typeof ForgotPasswordRoute
-  ResetPasswordRoute: typeof ResetPasswordRoute
+  AdminTalentsRoute: typeof AdminTalentsRoute
+  ApiTalentProfilesProfileIdPhotosRoute: typeof ApiTalentProfilesProfileIdPhotosRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -229,6 +282,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/producers': {
       id: '/producers'
       path: '/producers'
@@ -248,6 +308,13 @@ declare module '@tanstack/react-router' {
       path: '/join'
       fullPath: '/join'
       preLoaderRoute: typeof JoinRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard': {
@@ -278,37 +345,81 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/forgot-password': {
-      id: '/forgot-password'
-      path: '/forgot-password'
-      fullPath: '/forgot-password'
-      preLoaderRoute: typeof ForgotPasswordRouteImport
+    '/admin/talents': {
+      id: '/admin/talents'
+      path: '/admin/talents'
+      fullPath: '/admin/talents'
+      preLoaderRoute: typeof AdminTalentsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/reset-password': {
-      id: '/reset-password'
-      path: '/reset-password'
-      fullPath: '/reset-password'
-      preLoaderRoute: typeof ResetPasswordRouteImport
+    '/dashboard/profile/$profileId': {
+      id: '/dashboard/profile/$profileId'
+      path: '/profile/$profileId'
+      fullPath: '/dashboard/profile/$profileId'
+      preLoaderRoute: typeof DashboardProfileProfileIdRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/api/talent-profiles/$profileId/photos': {
+      id: '/api/talent-profiles/$profileId/photos'
+      path: '/api/talent-profiles/$profileId/photos'
+      fullPath: '/api/talent-profiles/$profileId/photos'
+      preLoaderRoute: typeof ApiTalentProfilesProfileIdPhotosRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/api/talent-profiles/$profileId/photos/$photoId': {
+      id: '/api/talent-profiles/$profileId/photos/$photoId'
+      path: '/$photoId'
+      fullPath: '/api/talent-profiles/$profileId/photos/$photoId'
+      preLoaderRoute: typeof ApiTalentProfilesProfileIdPhotosPhotoIdRouteImport
+      parentRoute: typeof ApiTalentProfilesProfileIdPhotosRoute
     }
   }
 }
+
+interface DashboardRouteChildren {
+  DashboardProfileProfileIdRoute: typeof DashboardProfileProfileIdRoute
+}
+
+const DashboardRouteChildren: DashboardRouteChildren = {
+  DashboardProfileProfileIdRoute: DashboardProfileProfileIdRoute,
+}
+
+const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
+  DashboardRouteChildren,
+)
+
+interface ApiTalentProfilesProfileIdPhotosRouteChildren {
+  ApiTalentProfilesProfileIdPhotosPhotoIdRoute: typeof ApiTalentProfilesProfileIdPhotosPhotoIdRoute
+}
+
+const ApiTalentProfilesProfileIdPhotosRouteChildren: ApiTalentProfilesProfileIdPhotosRouteChildren =
+  {
+    ApiTalentProfilesProfileIdPhotosPhotoIdRoute:
+      ApiTalentProfilesProfileIdPhotosPhotoIdRoute,
+  }
+
+const ApiTalentProfilesProfileIdPhotosRouteWithChildren =
+  ApiTalentProfilesProfileIdPhotosRoute._addFileChildren(
+    ApiTalentProfilesProfileIdPhotosRouteChildren,
+  )
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
   ContactRoute: ContactRoute,
-  DashboardRoute: DashboardRoute,
+  DashboardRoute: DashboardRouteWithChildren,
+  ForgotPasswordRoute: ForgotPasswordRoute,
   JoinRoute: JoinRoute,
   LoginRoute: LoginRoute,
   ProducersRoute: ProducersRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TalentRoute: TalentRoute,
   VerifyEmailRoute: VerifyEmailRoute,
   WorkRoute: WorkRoute,
-  ForgotPasswordRoute: ForgotPasswordRoute,
-  ResetPasswordRoute: ResetPasswordRoute,
+  AdminTalentsRoute: AdminTalentsRoute,
+  ApiTalentProfilesProfileIdPhotosRoute:
+    ApiTalentProfilesProfileIdPhotosRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

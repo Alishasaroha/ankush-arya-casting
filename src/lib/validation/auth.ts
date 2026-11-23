@@ -67,3 +67,37 @@ export const loginSchema = z.object({
 });
 
 export type LoginInput = z.infer<typeof loginSchema>;
+
+// Password reset requests always return a generic response from the server.
+export const passwordResetRequestSchema = z.object({
+  email: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .email("Please enter a valid email address"),
+});
+
+export type PasswordResetRequestInput = z.infer<
+  typeof passwordResetRequestSchema
+>;
+
+export const passwordResetSchema = z
+  .object({
+    token: z
+      .string()
+      .length(64, "Invalid password reset token")
+      .regex(/^[a-f0-9]{64}$/i, "Invalid password reset token"),
+    password: z
+      .string()
+      .min(8, "Password must be at least 8 characters")
+      .max(128, "Password cannot exceed 128 characters"),
+    confirmPassword: z
+      .string()
+      .max(128, "Password cannot exceed 128 characters"),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
+
+export type PasswordResetInput = z.infer<typeof passwordResetSchema>;

@@ -13,9 +13,11 @@ import { Route as WorkRouteImport } from './routes/work'
 import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as TalentRouteImport } from './routes/talent'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ProducersRouteImport } from './routes/producers'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as JoinRouteImport } from './routes/join'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as AboutRouteImport } from './routes/about'
@@ -45,6 +47,11 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProducersRoute = ProducersRouteImport.update({
   id: '/producers',
   path: '/producers',
@@ -58,6 +65,11 @@ const LoginRoute = LoginRouteImport.update({
 const JoinRoute = JoinRouteImport.update({
   id: '/join',
   path: '/join',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardRoute = DashboardRouteImport.update({
@@ -109,9 +121,11 @@ export interface FileRoutesByFullPath {
   '/about': typeof AboutRoute
   '/contact': typeof ContactRoute
   '/dashboard': typeof DashboardRouteWithChildren
+  '/forgot-password': typeof ForgotPasswordRoute
   '/join': typeof JoinRoute
   '/login': typeof LoginRoute
   '/producers': typeof ProducersRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/talent': typeof TalentRoute
   '/verify-email': typeof VerifyEmailRoute
@@ -126,9 +140,11 @@ export interface FileRoutesByTo {
   '/about': typeof AboutRoute
   '/contact': typeof ContactRoute
   '/dashboard': typeof DashboardRouteWithChildren
+  '/forgot-password': typeof ForgotPasswordRoute
   '/join': typeof JoinRoute
   '/login': typeof LoginRoute
   '/producers': typeof ProducersRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/talent': typeof TalentRoute
   '/verify-email': typeof VerifyEmailRoute
@@ -144,9 +160,11 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/contact': typeof ContactRoute
   '/dashboard': typeof DashboardRouteWithChildren
+  '/forgot-password': typeof ForgotPasswordRoute
   '/join': typeof JoinRoute
   '/login': typeof LoginRoute
   '/producers': typeof ProducersRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/talent': typeof TalentRoute
   '/verify-email': typeof VerifyEmailRoute
@@ -163,9 +181,11 @@ export interface FileRouteTypes {
     | '/about'
     | '/contact'
     | '/dashboard'
+    | '/forgot-password'
     | '/join'
     | '/login'
     | '/producers'
+    | '/reset-password'
     | '/sitemap.xml'
     | '/talent'
     | '/verify-email'
@@ -180,9 +200,11 @@ export interface FileRouteTypes {
     | '/about'
     | '/contact'
     | '/dashboard'
+    | '/forgot-password'
     | '/join'
     | '/login'
     | '/producers'
+    | '/reset-password'
     | '/sitemap.xml'
     | '/talent'
     | '/verify-email'
@@ -197,9 +219,11 @@ export interface FileRouteTypes {
     | '/about'
     | '/contact'
     | '/dashboard'
+    | '/forgot-password'
     | '/join'
     | '/login'
     | '/producers'
+    | '/reset-password'
     | '/sitemap.xml'
     | '/talent'
     | '/verify-email'
@@ -215,9 +239,11 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   ContactRoute: typeof ContactRoute
   DashboardRoute: typeof DashboardRouteWithChildren
+  ForgotPasswordRoute: typeof ForgotPasswordRoute
   JoinRoute: typeof JoinRoute
   LoginRoute: typeof LoginRoute
   ProducersRoute: typeof ProducersRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TalentRoute: typeof TalentRoute
   VerifyEmailRoute: typeof VerifyEmailRoute
@@ -256,6 +282,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/producers': {
       id: '/producers'
       path: '/producers'
@@ -275,6 +308,13 @@ declare module '@tanstack/react-router' {
       path: '/join'
       fullPath: '/join'
       preLoaderRoute: typeof JoinRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard': {
@@ -368,9 +408,11 @@ const rootRouteChildren: RootRouteChildren = {
   AboutRoute: AboutRoute,
   ContactRoute: ContactRoute,
   DashboardRoute: DashboardRouteWithChildren,
+  ForgotPasswordRoute: ForgotPasswordRoute,
   JoinRoute: JoinRoute,
   LoginRoute: LoginRoute,
   ProducersRoute: ProducersRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TalentRoute: TalentRoute,
   VerifyEmailRoute: VerifyEmailRoute,

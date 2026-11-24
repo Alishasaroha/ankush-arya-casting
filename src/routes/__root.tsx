@@ -34,12 +34,14 @@ function NotFoundComponent() {
     );
 }
 
-function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
+function ErrorComponent({ error, reset }: { error: unknown; reset: () => void }) {
     console.error(error);
     const router = useRouter();
     useEffect(() => {
         reportLovableError(error, { boundary: "tanstack_root_error_component" });
     }, [error]);
+    const errorMessage =
+  error instanceof Error ? error.message : String(error);
 
     return (
         <div className="flex min-h-screen items-center justify-center bg-background px-6">
@@ -51,7 +53,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
                 </p>
                 {import.meta.env.DEV && (
                     <pre className="mt-6 max-w-full overflow-x-auto border border-destructive/30 bg-destructive/5 p-4 text-left text-xs text-destructive">
-                        {error.message}
+                        {errorMessage}
                     </pre>
                 )}
                 <div className="mt-10 flex flex-wrap justify-center gap-3">

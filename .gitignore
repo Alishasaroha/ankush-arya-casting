@@ -24,11 +24,13 @@ dist-ssr
 *.sw?
 .tanstack/
 /src/generated/prisma
-
 # Environment variables
 .env
 .env.*
 !.env.example
-
 # Generated Prisma client
 /src/generated/prisma/
+# Deployment and build artifacts
+.output/
+.vercel/
+.wrangler/

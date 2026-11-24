@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { generateEmailVerificationToken } from "./verification-token";
 import { registerSchema } from "../../validation/auth";
 import { registerGuardianSchema } from "../../validation/guardian";
@@ -39,7 +40,7 @@ export async function registerAdultActor(input: unknown) {
 
   if (!result.success) {
     const fieldErrors = Object.fromEntries(
-      Object.entries(result.error.flatten().fieldErrors)
+      Object.entries(z.flattenError(result.error).fieldErrors)
         .filter(([, messages]) => messages)
     ) as Record<string, string[]>;
 
@@ -143,7 +144,7 @@ export async function registerGuardianWithChild(input: unknown) {
 
   if (!result.success) {
     const fieldErrors = Object.fromEntries(
-      Object.entries(result.error.flatten().fieldErrors).filter(([, messages]) => messages),
+      Object.entries(z.flattenError(result.error).fieldErrors).filter(([, messages]) => messages),
     ) as Record<string, string[]>;
 
     throw new RegistrationValidationError(fieldErrors);
@@ -216,7 +217,7 @@ export async function registerManager(input: unknown) {
 
   if (!result.success) {
     const fieldErrors = Object.fromEntries(
-      Object.entries(result.error.flatten().fieldErrors).filter(([, messages]) => messages),
+      Object.entries(z.flattenError(result.error).fieldErrors).filter(([, messages]) => messages),
     ) as Record<string, string[]>;
 
     throw new RegistrationValidationError(fieldErrors);

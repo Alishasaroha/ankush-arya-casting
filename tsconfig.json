@@ -3,7 +3,9 @@
     "src/**/*.ts",
     "src/**/*.tsx",
     "vite.config.ts",
-    "eslint.config.js"
+    "eslint.config.js",
+    "prisma7.config.ts",
+"prisma-test.config.ts"
   ],
   "compilerOptions": {
     "target": "ES2022",
@@ -15,8 +17,9 @@
       "DOM.Iterable"
     ],
     "types": [
-      "vite/client"
-    ],
+  "vite/client",
+  "node"
+],
     /* Bundler mode */
     "moduleResolution": "Bundler",
     "allowImportingTsExtensions": true,
